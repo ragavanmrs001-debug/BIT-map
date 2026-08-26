@@ -1,0 +1,345 @@
+# Google Antigravity — Execute the BIT Vision Plan Completely
+
+You are the primary implementation agent for the project described in:
+
+BIT_Vision_Full_Plan.md
+
+Your job is to take that plan and turn it into a working, polished application.
+
+IMPORTANT:
+Do not stop after writing a plan.
+Do not merely explain what should be built.
+Do not leave the main work unfinished.
+Do not replace real functionality with fake/demo data just to make the UI look complete.
+
+## OPERATING MODE
+
+Follow this workflow:
+
+1. Read `BIT_Vision_Full_Plan.md` completely.
+2. Inspect the existing workspace before changing anything.
+3. Inspect the reference website:
+   https://geobits.onrender.com/about
+4. Research official/legitimate data providers when a data source is required.
+5. Decide the smallest production-quality implementation that satisfies the plan.
+6. Implement it directly in the workspace.
+7. Run the application.
+8. Use the browser to inspect the actual UI.
+9. Test important interactions.
+10. Fix errors, broken layouts, console errors and failed integrations.
+11. Re-run the application and verify again.
+12. Continue until the core plan is implemented and working.
+
+Do not ask me to manually implement ordinary coding steps that you can perform in the workspace.
+
+If a decision is needed, use the plan's principles and choose the most sensible implementation instead of stopping unnecessarily.
+
+## PRIORITY ORDER
+
+Implement in this order:
+
+1. Working project foundation
+2. 2D map
+3. Unified GPS/location manager
+4. Follow Me + Recenter
+5. 3D Earth/campus view
+6. Shared location synchronization between 2D and 3D
+7. Verified BIT campus data
+8. Satellite imagery integration
+9. Weather
+10. Environmental layers
+11. Campus search
+12. Walking navigation
+13. Student/hostel modules
+14. AI features
+15. Final polish
+
+Do not let advanced optional features prevent the core mapping/location system from working.
+
+## LOCATION REQUIREMENTS
+
+Create one shared location service.
+
+It must provide:
+
+- latitude
+- longitude
+- accuracy
+- speed where available
+- heading where available
+- last update time
+- distance travelled
+- permission status
+- tracking state
+
+Both the 2D map and the 3D view must consume the same location state.
+
+Do not implement separate GPS logic for 2D and 3D.
+
+When the user moves:
+
+- update the user marker smoothly
+- update the 2D camera when Follow Me is enabled
+- update the 3D camera when Follow Me is enabled
+- keep manual exploration possible when Follow Me is disabled
+
+Support both:
+- Recenter on Me
+- Follow Me
+
+Do not constantly force the camera back to the user's position when Follow Me is off.
+
+## GLOBAL LOCATION REQUIREMENT
+
+Do not hard-code the location system to BIT.
+
+It should work if the user travels to:
+
+- another city
+- another state
+- another country
+- another continent
+
+The underlying geographic engine remains global.
+
+BIT-specific information should activate primarily around the BIT campus.
+
+## 2D REQUIREMENTS
+
+Build a usable interactive map with:
+
+- map/satellite mode
+- current user location
+- Follow Me
+- Recenter
+- search
+- zoom
+- rotation
+- layer controls
+- campus POIs
+- route visualization
+- location information panel
+
+## 3D REQUIREMENTS
+
+Build a high-quality 3D experience with:
+
+- Earth sphere
+- atmosphere
+- lighting
+- day/night appearance
+- cloud layer when supported
+- smooth zoom
+- smooth Earth-to-BIT transition
+- current-location marker
+- campus-level view
+- Follow Me
+- performance fallback
+
+The goal is high-quality rendering, not fake satellite footage.
+
+## SATELLITE REQUIREMENTS
+
+Use legitimate satellite/earth-observation data.
+
+Investigate official sources such as:
+
+- NASA Worldview/GIBS
+- Google Earth Engine
+- other legitimate/open datasets as appropriate
+
+Do not scrape Google Earth or Google Maps satellite imagery.
+
+Do not invent imagery.
+
+Do not invent timestamps.
+
+Do not label delayed imagery "LIVE".
+
+Show accurate metadata such as:
+
+- source
+- dataset/layer
+- imagery date
+- last available update
+- status
+
+Create an abstraction so another provider can be added later.
+
+## CAMPUS DATA REQUIREMENTS
+
+Do not invent BIT buildings or coordinates.
+
+Use verified sources.
+
+Create a structured campus data model.
+
+For each campus point of interest, support:
+
+- name
+- category
+- description
+- coordinates
+- optional metadata
+
+## WEATHER REQUIREMENTS
+
+Use a legitimate weather provider.
+
+Show actual:
+
+- temperature
+- feels-like temperature where available
+- humidity
+- wind
+- rain/precipitation information
+- condition
+- last updated time
+
+If data is unavailable, show a truthful unavailable/error state.
+
+## NAVIGATION REQUIREMENTS
+
+Support:
+
+START
+DESTINATION
+
+Show:
+
+- walking route
+- distance
+- ETA
+- progress
+
+Avoid unnecessary API requests while the user moves.
+
+## UI REQUIREMENTS
+
+Create an original, polished geospatial interface inspired by the reference experience but NOT a source-code clone.
+
+Use:
+
+- modern dark interface
+- strong contrast
+- clean typography
+- cinematic map/globe area
+- subtle HUD elements
+- smooth motion
+- responsive mobile layout
+- accessible controls
+- clear loading/error states
+
+Prioritize usability over decoration.
+
+## DATA INTEGRITY
+
+NEVER:
+
+- fabricate real-time values
+- fabricate coordinates
+- fabricate satellite timestamps
+- claim an API succeeded when it did not
+- silently substitute fake data for real data
+
+For development placeholders, clearly label them as mock/demo data and replace them with real integration where possible before completion.
+
+## API KEYS AND SECURITY
+
+Never commit secret API keys.
+
+Use environment variables.
+
+Create/update:
+
+- `.env.example`
+- documentation for required variables
+
+Keep server-only secrets on the server.
+
+## TESTING
+
+You are responsible for testing the application.
+
+At minimum:
+
+- start the app
+- load the main page
+- inspect browser console
+- test 2D mode
+- test 3D mode
+- test location permission states
+- test Follow Me
+- test Recenter
+- test 2D/3D synchronization
+- test satellite layers
+- test weather
+- test search
+- test navigation
+- test responsive layout
+- test API error states
+
+Fix issues you find.
+
+## PERFORMANCE
+
+Optimize for ordinary student hardware.
+
+Use:
+
+- lazy loading
+- code splitting
+- optimized textures/assets
+- efficient map layers
+- debounced/throttled updates
+- GPS smoothing
+- caching where appropriate
+- reduced rendering quality on weak devices
+
+## IMPORTANT COMPLETION RULE
+
+Do not stop merely because:
+
+- the folder structure exists
+- the plan is written
+- the UI is visible
+- one page renders
+
+The goal is a working application.
+
+After each major phase:
+
+1. implement
+2. run
+3. inspect
+4. test
+5. fix
+6. continue
+
+If one external provider cannot be integrated because authentication or access is unavailable, implement the correct provider abstraction and a truthful fallback state, document exactly what credential/access is needed, and continue implementing everything else.
+
+Do not leave unrelated features unfinished just because one integration is blocked.
+
+## FINAL VERIFICATION
+
+Before reporting completion:
+
+- run the production build
+- run the application
+- verify major pages in the browser
+- fix build errors
+- fix runtime errors
+- remove obvious placeholder/demo text
+- ensure environment configuration is documented
+- ensure the app can be continued by another developer
+- update README with setup, environment variables, architecture and run commands
+
+When finished, report:
+
+1. what was implemented
+2. what was verified
+3. what remains blocked by external credentials/provider limitations
+4. exact commands to run the project
+5. exact environment variables still required
+
+Do not claim a feature is complete unless it was actually implemented and tested.
