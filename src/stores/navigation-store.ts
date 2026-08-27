@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+export type RouteType = 'pedestrian' | 'vehicle' | 'sheltered' | 'accessible';
+
 export interface RouteStep {
   text: string;
   instruction: string;
@@ -10,7 +12,7 @@ export interface RouteStep {
 interface NavigationState {
   from: string | null;
   to: string | null;
-  routeType: 'pedestrian' | 'vehicle';
+  routeType: RouteType;
   path: string[];
   nodeCoordinates: { x: number; y: number }[];
   steps: RouteStep[];
@@ -23,7 +25,7 @@ interface NavigationState {
 
   setFrom: (id: string | null) => void;
   setTo: (id: string | null) => void;
-  setRouteType: (type: 'pedestrian' | 'vehicle') => void;
+  setRouteType: (type: RouteType) => void;
   setRoute: (
     path: string[],
     nodeCoordinates: { x: number; y: number }[],

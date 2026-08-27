@@ -2,9 +2,9 @@ const CACHE_NAME = 'bit-map-pwa-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
-  '/images/map/Map.svg',
-  '/images/map/Map.webp',
-  '/images/map/Map_3D_satellite.webp',
+  '/images/Map.svg',
+  '/images/Map.webp',
+  '/images/logo.svg',
 ];
 
 self.addEventListener('install', (event) => {

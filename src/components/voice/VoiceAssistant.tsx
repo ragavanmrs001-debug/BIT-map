@@ -15,6 +15,7 @@ export default function VoiceAssistant() {
   const [transcript, setTranscript] = useState('');
   const [responseMessage, setResponseMessage] = useState('');
   const [voiceTrackerEnabled, setVoiceTrackerEnabled] = useState(true);
+  const [language, setLanguage] = useState<'en-US' | 'ta-IN'>('en-US');
 
   const { selectPlace, setZoomLevel } = useMapStore();
   const recognitionRef = useRef<any>(null);
@@ -28,11 +29,11 @@ export default function VoiceAssistant() {
         const recognition = new SpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
-        recognition.lang = 'en-US';
+        recognition.lang = language;
 
         recognition.onstart = () => {
           setIsListening(true);
-          setTranscript('Listening for command...');
+          setTranscript(language === 'ta-IN' ? 'கேட்கிறது...' : 'Listening for command...');
         };
 
         recognition.onresult = async (event: any) => {
@@ -45,7 +46,7 @@ export default function VoiceAssistant() {
         recognition.onerror = (event: any) => {
           console.error('Speech recognition error:', event.error);
           setIsListening(false);
-          setTranscript('Could not hear audio. Please try again.');
+          setTranscript(language === 'ta-IN' ? 'ஒலி கேட்கவில்லை. மீண்டும் முயலவும்.' : 'Could not hear audio. Please try again.');
         };
 
         recognition.onend = () => {
@@ -55,7 +56,7 @@ export default function VoiceAssistant() {
         recognitionRef.current = recognition;
       }
     }
-  }, []);
+  }, [language]);
 
   const toggleListening = () => {
     if (isListening) {
@@ -66,14 +67,21 @@ export default function VoiceAssistant() {
     }
   };
 
+  const handleLanguageChange = (newLang: 'en-US' | 'ta-IN') => {
+    setLanguage(newLang);
+    globalVoiceTracker.setLanguage(newLang);
+    const msg = newLang === 'ta-IN' ? 'தமிழ் குரல் முறை இயக்கப்பட்டன.' : 'English voice assistant activated.';
+    speakClientSide(msg);
+  };
+
   const toggleVoiceTracker = () => {
     const nextState = !voiceTrackerEnabled;
     setVoiceTrackerEnabled(nextState);
     globalVoiceTracker.setEnabled(nextState);
     if (nextState) {
-      speakClientSide('Voice navigation guidance enabled.');
+      speakClientSide(language === 'ta-IN' ? 'குரல் வழிகாட்டுதல் இயக்கப்பட்டது.' : 'Voice navigation guidance enabled.');
     } else {
-      speakClientSide('Voice navigation muted.');
+      speakClientSide(language === 'ta-IN' ? 'குரல் வழிகாட்டுதல் முடக்கப்பட்டது.' : 'Voice navigation muted.');
     }
   };
 
@@ -83,6 +91,7 @@ export default function VoiceAssistant() {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
+      utterance.lang = language;
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
       window.speechSynthesis.speak(utterance);
@@ -95,7 +104,7 @@ export default function VoiceAssistant() {
       const res = await fetch(BACKEND_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: commandText }),
+        body: JSON.stringify({ query: commandText, lang: language }),
       });
 
       if (res.ok) {
@@ -127,12 +136,12 @@ export default function VoiceAssistant() {
       // Check campus keywords locally
       const tagMatch = zoomLevel4Tags.find((t) => lower.includes(t.name.toLowerCase()));
       if (tagMatch) {
-        const reply = `Navigating to ${tagMatch.name}, sir.`;
+        const reply = language === 'ta-IN' ? `${tagMatch.name} பகுதிக்கு வழிகாட்டப்படுகிறது.` : `Navigating to ${tagMatch.name}, sir.`;
         setResponseMessage(reply);
         speakClientSide(reply);
         handleAutoNavigate(tagMatch.id);
       } else {
-        const reply = `I heard: ${commandText}. Operating in browser voice mode.`;
+        const reply = language === 'ta-IN' ? `நான் கேட்டது: ${commandText}` : `I heard: ${commandText}. Operating in browser voice mode.`;
         setResponseMessage(reply);
         speakClientSide(reply);
       }
@@ -189,7 +198,7 @@ export default function VoiceAssistant() {
                 }`}
               />
               <span className="font-bold text-sm text-slate-800 dark:text-slate-100">
-                JARVIS Campus AI
+                JARVIS Campus Voice AI
               </span>
             </div>
             <button
@@ -197,6 +206,30 @@ export default function VoiceAssistant() {
               className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xs font-bold"
             >
               ✕
+            </button>
+          </div>
+
+          {/* Bilingual Language Selector */}
+          <div className="flex items-center gap-2 mb-3">
+            <button
+              onClick={() => handleLanguageChange('en-US')}
+              className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                language === 'en-US'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              🇺🇸 English
+            </button>
+            <button
+              onClick={() => handleLanguageChange('ta-IN')}
+              className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                language === 'ta-IN'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              🇮🇳 தமிழ் (Tamil)
             </button>
           </div>
 
@@ -216,10 +249,10 @@ export default function VoiceAssistant() {
             </button>
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">
               {isListening
-                ? 'Listening...'
+                ? language === 'ta-IN' ? 'கேட்கிறது...' : 'Listening...'
                 : isSpeaking
                 ? 'JARVIS Speaking...'
-                : 'Tap microphone to speak'}
+                : language === 'ta-IN' ? 'பேச மைக் தொடுங்கள்' : 'Tap microphone to speak'}
             </p>
           </div>
 

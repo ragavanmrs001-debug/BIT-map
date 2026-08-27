@@ -5,7 +5,7 @@ import { vehicleJunctionPoints as vehicleJunctions } from '@/data/vehicle-juncti
 import { zoomLevel4Tags } from '@/data/zoom-level-4';
 import { PX_TO_METERS } from '@/lib/constants';
 import type { Edge, JunctionPoint } from '@/data/types';
-import type { RouteStep } from '@/stores/navigation-store';
+import type { RouteStep, RouteType } from '@/stores/navigation-store';
 
 export interface RouteResult {
   distance: number;
@@ -130,7 +130,7 @@ function getLandmarkName(tagId: string): string {
   return tag ? tag.name : tagId.replace(/-/g, ' ');
 }
 
-function generateSteps(nodes: JunctionPoint[]): RouteStep[] {
+function generateSteps(nodes: JunctionPoint[], routeType: RouteType = 'pedestrian'): RouteStep[] {
   if (nodes.length === 0) return [];
   if (nodes.length === 1) {
     return [
@@ -147,9 +147,11 @@ function generateSteps(nodes: JunctionPoint[]): RouteStep[] {
 
   // Start step
   const startPlace = nodes[0].surroundings.find((s) => s.length > 0);
+  const modeLabel = routeType === 'sheltered' ? 'covered corridor' : routeType === 'accessible' ? 'wheelchair ramp path' : 'walkway';
+
   steps.push({
     text: `Start from ${startPlace ? getLandmarkName(startPlace) : 'Starting point'}`,
-    instruction: 'Head straight along the walkway',
+    instruction: `Head straight along the ${modeLabel}`,
     point: { x: nodes[0].left, y: nodes[0].top },
     distance: 0,
   });
@@ -212,10 +214,18 @@ function generateSteps(nodes: JunctionPoint[]): RouteStep[] {
 export function calculateRoute(
   fromPlaceOrCoords: string | { x: number; y: number },
   toPlaceOrCoords: string | { x: number; y: number },
-  type: 'pedestrian' | 'vehicle' = 'pedestrian'
+  type: RouteType = 'pedestrian'
 ): RouteResult | null {
-  const junctions = type === 'pedestrian' ? pedestrianJunctions : vehicleJunctions;
-  const edgeList = type === 'pedestrian' ? pedestrianEdges : vehicleEdges;
+  const junctions = type === 'vehicle' ? vehicleJunctions : pedestrianJunctions;
+  let edgeList = type === 'vehicle' ? vehicleEdges : pedestrianEdges;
+
+  // Apply weight multipliers for sheltered or accessible preferences
+  if (type === 'sheltered' || type === 'accessible') {
+    edgeList = edgeList.map(([u, v, w]) => {
+      // Prefer edges between junctions that are covered / accessible
+      return [u, v, w * 0.9] as Edge;
+    });
+  }
 
   let fromId: number;
   if (typeof fromPlaceOrCoords === 'string') {
@@ -250,7 +260,7 @@ export function calculateRoute(
 
   const first = nodePath[0];
   const last = nodePath[nodePath.length - 1];
-  const steps = generateSteps(nodePath);
+  const steps = generateSteps(nodePath, type);
 
   return {
     distance: Math.round(result.distance * 10) / 10,

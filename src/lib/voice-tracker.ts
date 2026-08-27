@@ -5,6 +5,7 @@ export const METERS_PER_STEP = 0.75;
 
 export interface CampusLandmark {
   name: string;
+  nameTa?: string;
   x: number;
   y: number;
   lat: number;
@@ -16,6 +17,7 @@ export interface CampusLandmark {
 export const BIT_LANDMARKS: CampusLandmark[] = [
   {
     name: 'Main Academic Quad / Admin Block',
+    nameTa: 'முதன்மை நிர்வாக தொகுதி',
     x: 1700,
     y: 1950,
     lat: 11.4945,
@@ -24,6 +26,7 @@ export const BIT_LANDMARKS: CampusLandmark[] = [
   },
   {
     name: 'Central Library',
+    nameTa: 'மத்திய நூலகம்',
     x: 1550,
     y: 1800,
     lat: 11.4950,
@@ -32,6 +35,7 @@ export const BIT_LANDMARKS: CampusLandmark[] = [
   },
   {
     name: 'Computer Science & IT Block',
+    nameTa: 'கணினி அறிவியல் மற்றும் தகவல் தொழில்நுட்ப கட்டிடம்',
     x: 1850,
     y: 2100,
     lat: 11.4940,
@@ -40,6 +44,7 @@ export const BIT_LANDMARKS: CampusLandmark[] = [
   },
   {
     name: 'Mechanical & Electrical Block',
+    nameTa: 'இயந்திரவியல் மற்றும் மின்சாரவியல் பிரிவு',
     x: 1400,
     y: 2200,
     lat: 11.4935,
@@ -48,6 +53,7 @@ export const BIT_LANDMARKS: CampusLandmark[] = [
   },
   {
     name: 'BIT Main Canteen & Food Court',
+    nameTa: 'பி.ஐ.டி உணவகம்',
     x: 2100,
     y: 1750,
     lat: 11.4955,
@@ -56,6 +62,7 @@ export const BIT_LANDMARKS: CampusLandmark[] = [
   },
   {
     name: 'Student Hostel Complex',
+    nameTa: 'மாணவர் விடுதி வளாகம்',
     x: 2300,
     y: 1400,
     lat: 11.4965,
@@ -72,6 +79,7 @@ export class VoiceTrackerEngine {
   private hasAnnouncedFirstStep = false;
   private lastStationaryAnnouncementTime = 0;
   private enabled = true;
+  private language: 'en-US' | 'ta-IN' = 'en-US';
 
   constructor() {}
 
@@ -87,6 +95,14 @@ export class VoiceTrackerEngine {
 
   public isEnabled(): boolean {
     return this.enabled;
+  }
+
+  public setLanguage(lang: 'en-US' | 'ta-IN') {
+    this.language = lang;
+  }
+
+  public getLanguage(): 'en-US' | 'ta-IN' {
+    return this.language;
   }
 
   // Calculate distance in meters using Haversine formula
@@ -133,12 +149,12 @@ export class VoiceTrackerEngine {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.95; // Smooth natural pacing
       utterance.pitch = 1.0;
-      utterance.lang = 'en-US';
+      utterance.lang = this.language;
 
-      // Pick standard smooth English voice if available
+      // Pick smooth voice matching current language
       const voices = window.speechSynthesis.getVoices();
       const preferredVoice = voices.find(
-        (v) => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Alex'))
+        (v) => v.lang.startsWith(this.language.slice(0, 2))
       );
       if (preferredVoice) {
         utterance.voice = preferredVoice;
@@ -179,7 +195,11 @@ export class VoiceTrackerEngine {
         const { landmark, distanceMeters } = this.getNearestLandmark(lat, lng);
         const steps = this.metersToSteps(distanceMeters);
         
-        const message = `Moving forward. In about ${steps} steps, you will reach ${landmark.name}.`;
+        const landmarkName = this.language === 'ta-IN' && landmark.nameTa ? landmark.nameTa : landmark.name;
+        const message = this.language === 'ta-IN'
+          ? `முன்னோக்கி செல்லவும். ${steps} அடிகளில் ${landmarkName} வந்துவிடுவீர்கள்.`
+          : `Moving forward. In about ${steps} steps, you will reach ${landmarkName}.`;
+
         this.speak(message);
 
         // Reset first step announcement flag after 30 seconds of walking
@@ -214,9 +234,7 @@ export class VoiceTrackerEngine {
   // Announce stationary location and steps to surrounding BIT landmarks
   private announceStationaryLocation(lat: number, lng: number) {
     const { landmark, distanceMeters } = this.getNearestLandmark(lat, lng);
-    const stepsToCurrent = this.metersToSteps(distanceMeters);
 
-    // Find a second nearby landmark for rich context
     const sorted = [...BIT_LANDMARKS]
       .map((lm) => ({
         landmark: lm,
@@ -227,14 +245,22 @@ export class VoiceTrackerEngine {
     const nearest = sorted[0];
     const secondNearest = sorted[1] || sorted[0];
 
+    const nName = this.language === 'ta-IN' && nearest.landmark.nameTa ? nearest.landmark.nameTa : nearest.landmark.name;
+    const snName = this.language === 'ta-IN' && secondNearest.landmark.nameTa ? secondNearest.landmark.nameTa : secondNearest.landmark.name;
+
     let commentary = '';
-    if (nearest.steps < 20) {
-      commentary = `You have been standing at ${nearest.landmark.name} for 60 seconds. `;
-      if (secondNearest && secondNearest.steps > 0) {
-        commentary += `You are ${secondNearest.steps} steps away from ${secondNearest.landmark.name}.`;
+    if (this.language === 'ta-IN') {
+      if (nearest.steps < 20) {
+        commentary = `நீங்கள் 60 வினாடிகளாக ${nName} அருகில் நிற்கிறீர்கள். ${snName} நோக்கி ${secondNearest.steps} அடிகள் உள்ளன.`;
+      } else {
+        commentary = `நீங்கள் 60 வினாடிகளாக இங்கு நிற்கிறீர்கள். ${nName} நோக்கி ${nearest.steps} அடிகளும், ${snName} நோக்கி ${secondNearest.steps} அடிகளும் உள்ளன.`;
       }
     } else {
-      commentary = `You have been standing in the BIT Campus area for 60 seconds. You are ${nearest.steps} steps from ${nearest.landmark.name}, and ${secondNearest.steps} steps from ${secondNearest.landmark.name}.`;
+      if (nearest.steps < 20) {
+        commentary = `You have been standing at ${nName} for 60 seconds. You are ${secondNearest.steps} steps away from ${snName}.`;
+      } else {
+        commentary = `You have been standing in the BIT Campus area for 60 seconds. You are ${nearest.steps} steps from ${nName}, and ${secondNearest.steps} steps from ${snName}.`;
+      }
     }
 
     this.speak(commentary);
