@@ -28,6 +28,15 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Never intercept Next.js static asset chunks, HMR, or API requests
+  if (
+    event.request.url.includes('/_next/') ||
+    event.request.url.includes('/api/') ||
+    event.request.method !== 'GET'
+  ) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       return (

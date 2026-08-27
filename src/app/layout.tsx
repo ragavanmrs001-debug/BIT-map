@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'GeoBITs',
+  title: 'GeoBITs - Bannari Amman Institute of Technology Map',
   description:
-    'GeoBITs is an online map covering all the places and classes in Bannari Amman Institute of Technology. The idea was to help new students to get familiar with college campus and provide an overview of which department is where. The map have two layers, SVG and satellite, and four different zoom levels, you can double tap to zoom in the map. Searching functionality in the map can help the students to find the exam halls and venues of their special classes as it is frequently changing. Hope it helps to navigate the campus and saves your time',
+    'Interactive Smart Campus Mapping & Voice Navigation for Bannari Amman Institute of Technology',
 };
 
 export default function RootLayout({
@@ -26,9 +26,17 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js');
-                });
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for (let registration of registrations) {
+                      registration.unregister();
+                    }
+                  });
+                } else {
+                  window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/sw.js');
+                  });
+                }
               }
             `,
           }}
