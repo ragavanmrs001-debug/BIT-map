@@ -53,38 +53,58 @@ export default function PlaceDetails() {
       {/* Place details panel */}
       <div
         ref={detailsRef}
-        className="place-details open dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:shadow-2xl"
+        className="place-details open z-[210] dark:bg-slate-900 dark:border-slate-700 dark:text-white shadow-2xl"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="place-title text-primary dark:text-primary-light font-bold">{building?.name || tagName}</div>
-        <div className="place-main dark:text-slate-400 font-medium">{building?.main || ''}</div>
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="place-title text-indigo-600 dark:text-indigo-400 font-bold text-xl leading-tight">
+              {building?.name || tagName}
+            </div>
+            <div className="place-main dark:text-slate-400 text-sm font-medium mt-0.5">
+              {building?.main || 'Campus Location'}
+            </div>
+          </div>
+          <button
+            onClick={handleClose}
+            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition-colors"
+            title="Close details"
+          >
+            ✕
+          </button>
+        </div>
 
         {building && building.floors.length > 0 && (
           <>
-            <div className="floors dark:border-slate-800 dark:bg-gradient-to-b dark:from-slate-800/50 dark:to-transparent">
-              <div
-                className="underline bg-primary"
-                style={{ transform: `translateX(${activeFloor * 100}px)` }}
-              />
+            {/* Floor selector tabs */}
+            <div className="flex items-center gap-2 overflow-x-auto py-3 my-2 scrollbar-none border-b border-slate-100 dark:border-slate-800">
               {building.floors.map((floor, idx) => (
-                <div
+                <button
                   key={floor.name}
-                  className={`floor ${idx === activeFloor ? 'active text-primary font-bold' : 'dark:text-slate-400'}`}
                   onClick={() => setActiveFloor(idx)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                    idx === activeFloor
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
                 >
                   {floor.name}
-                </div>
+                </button>
               ))}
             </div>
 
+            {/* Room list */}
             {building.floors.map((floor, idx) => (
               <ul
                 key={floor.name}
-                className={`classes ${idx === activeFloor ? 'visible' : ''} dark:text-slate-200`}
+                className={`classes ${idx === activeFloor ? 'visible' : ''} dark:text-slate-200 mt-2 space-y-1.5 max-h-[160px] overflow-y-auto pr-2`}
               >
                 {floor.rooms.map((room, roomIdx) => (
-                  <li key={roomIdx} className="py-1">{room}</li>
+                  <li key={roomIdx} className="text-sm flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
+                    <span>{room}</span>
+                  </li>
                 ))}
               </ul>
             ))}
@@ -93,7 +113,7 @@ export default function PlaceDetails() {
       </div>
 
       {/* Down button */}
-      <div className="get-down-btn open dark:bg-slate-800 dark:border-slate-600 dark:shadow-lg" onClick={handleClose}>
+      <div className="get-down-btn open z-[210] dark:bg-slate-800 dark:border-slate-600 shadow-xl" onClick={handleClose}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/icons/down.svg"

@@ -12,6 +12,9 @@ import DirectionsPanel from '@/components/navigation/DirectionsPanel';
 import FloatingNavCard from '@/components/navigation/FloatingNavCard';
 import { useMapStore } from '@/stores/map-store';
 
+import { LocationMarkerButton } from '@/components/map/LocationMarker';
+import VoiceAssistant from '@/components/voice/VoiceAssistant';
+
 // Dynamic import for ThreeMap3D with SSR disabled
 const ThreeMap3D = dynamic(() => import('@/components/map/ThreeMap3D'), {
   ssr: false,
@@ -75,6 +78,12 @@ function MapView() {
 
       {/* Zoom and Layer Action Controls */}
       <ZoomControls />
+
+      {/* Real-time GPS Blue Dot Location Marker Button */}
+      <LocationMarkerButton />
+
+      {/* Floating JARVIS Voice AI Assistant */}
+      <VoiceAssistant />
 
       {/* Instruction Popup Modal (in 2D mode) */}
       {viewMode === '2d' && <InstructionModal />}

@@ -1,0 +1,17 @@
+{
+  "name": "BIT-map Campus Navigator",
+  "short_name": "BIT-map",
+  "description": "Interactive Smart Campus Mapping & Voice Navigation for Bannari Amman Institute of Technology",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/icons/map.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

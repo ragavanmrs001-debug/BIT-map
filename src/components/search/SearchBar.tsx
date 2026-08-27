@@ -146,17 +146,28 @@ export default function SearchBar() {
 
   return (
     <div className="search-bar">
-      <div className="search-wrapper dark:bg-slate-900 dark:border dark:border-slate-700 dark:shadow-2xl">
-        <input
-          ref={inputRef}
-          className="search-input dark:bg-slate-900 dark:text-white dark:border-slate-700 dark:placeholder-slate-400"
-          type="text"
-          placeholder="Search campus buildings, labs, classrooms..."
-          value={query}
-          onChange={(e) => handleSearch(e.target.value)}
-          onFocus={() => query && setShowResults(true)}
-          autoComplete="off"
-        />
+      <div className="search-wrapper relative dark:bg-slate-900/95 backdrop-blur-md dark:border dark:border-slate-700/80 dark:shadow-2xl">
+        <div className="relative flex items-center">
+          <input
+            ref={inputRef}
+            className="search-input pr-10 dark:bg-slate-900/95 dark:text-white dark:border-slate-700 dark:placeholder-slate-400"
+            type="text"
+            placeholder="Search campus buildings, labs, classrooms..."
+            value={query}
+            onChange={(e) => handleSearch(e.target.value)}
+            onFocus={() => query && setShowResults(true)}
+            autoComplete="off"
+          />
+          {query && (
+            <button
+              onClick={() => handleSearch('')}
+              className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold w-5 h-5 rounded-full flex items-center justify-center"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          )}
+        </div>
         {showResults && results.length > 0 && (
           <div className="suggestions">
             <ul className="suggestion-list dark:bg-slate-900 dark:border-t dark:border-slate-800" style={{ display: 'block' }}>
@@ -164,9 +175,9 @@ export default function SearchBar() {
                 <li
                   key={`${result.id}-${i}`}
                   onClick={() => handleSelect(result)}
-                  className="dark:hover:bg-slate-800 dark:text-slate-200 transition-colors"
+                  className="dark:hover:bg-slate-800 dark:text-slate-200 transition-colors border-b border-slate-100 dark:border-slate-800/60 last:border-0"
                 >
-                  <div className="match font-semibold text-primary">{result.match}</div>
+                  <div className="match font-semibold text-indigo-600 dark:text-indigo-400">{result.match}</div>
                   <div className="building-place dark:text-slate-400">
                     {result.floor ? `${result.floor}, ` : ''}{result.name}
                   </div>

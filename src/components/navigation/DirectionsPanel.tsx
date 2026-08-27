@@ -87,13 +87,13 @@ export default function DirectionsPanel() {
   };
 
   return (
-    <div className="directions-panel dark:bg-slate-900 dark:border dark:border-slate-700 dark:text-white dark:shadow-2xl">
+    <div className="directions-panel dark:bg-slate-900/95 backdrop-blur-md dark:border dark:border-slate-700/80 dark:text-white shadow-2xl">
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-slate-800">
-        <h3 className="font-bold text-lg text-primary dark:text-primary-light">Campus Directions</h3>
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 className="font-bold text-lg text-indigo-600 dark:text-indigo-400">Campus Directions</h3>
         <button
           onClick={() => setShowDirections(false)}
-          className="text-gray-500 hover:text-gray-800 dark:text-slate-400 dark:hover:text-white text-lg font-bold px-2"
+          className="text-slate-400 hover:text-slate-700 dark:hover:text-white text-lg font-bold px-2"
         >
           ✕
         </button>
@@ -107,10 +107,10 @@ export default function DirectionsPanel() {
             setRouteType('pedestrian');
             if (isActive) clearRoute();
           }}
-          className={`flex-1 py-1.5 text-xs font-semibold rounded transition-colors ${
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
             routeType === 'pedestrian'
-              ? 'bg-primary text-white'
-              : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
           }`}
         >
           🚶 Walking
@@ -121,10 +121,10 @@ export default function DirectionsPanel() {
             setRouteType('vehicle');
             if (isActive) clearRoute();
           }}
-          className={`flex-1 py-1.5 text-xs font-semibold rounded transition-colors ${
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
             routeType === 'vehicle'
-              ? 'bg-primary text-white'
-              : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
           }`}
         >
           🚗 Vehicle
@@ -132,16 +132,16 @@ export default function DirectionsPanel() {
       </div>
 
       {/* Inputs */}
-      <div className="space-y-2 text-xs">
+      <div className="space-y-2.5 text-xs">
         <div>
-          <label className="block text-gray-600 dark:text-slate-400 font-semibold mb-1">From:</label>
+          <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1">From:</label>
           <select
             value={fromSelection}
             onChange={(e) => {
               setFromSelection(e.target.value);
               setFrom(e.target.value);
             }}
-            className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded bg-white dark:bg-slate-800 dark:text-white font-medium"
+            className="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 dark:text-white font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
           >
             {isPinned && <option value="pinned-location">📍 Pinned Location</option>}
             {placeOptions.map((p) => (
@@ -157,21 +157,21 @@ export default function DirectionsPanel() {
             type="button"
             onClick={handleSwap}
             title="Swap Origin and Destination"
-            className="p-1 text-gray-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary-light transition-colors text-sm"
+            className="px-3 py-1 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 font-semibold text-xs transition-colors flex items-center gap-1 bg-slate-50 dark:bg-slate-800/60 rounded-full border border-slate-200 dark:border-slate-700"
           >
-            ⇅ Swap
+            ⇅ Swap Locations
           </button>
         </div>
 
         <div>
-          <label className="block text-gray-600 dark:text-slate-400 font-semibold mb-1">To:</label>
+          <label className="block text-slate-600 dark:text-slate-400 font-semibold mb-1">To:</label>
           <select
             value={toSelection}
             onChange={(e) => {
               setToSelection(e.target.value);
               setTo(e.target.value);
             }}
-            className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded bg-white dark:bg-slate-800 dark:text-white font-medium"
+            className="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 dark:text-white font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
           >
             {isPinned && <option value="pinned-location">📍 Pinned Location</option>}
             {placeOptions.map((p) => (
@@ -185,18 +185,18 @@ export default function DirectionsPanel() {
 
       {/* Error alert */}
       {error && (
-        <div className="mt-3 p-2 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 rounded text-xs">
+        <div className="mt-3 p-2.5 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 rounded-lg text-xs font-medium">
           {error}
         </div>
       )}
 
       {/* Route Result Info */}
       {isActive && distance > 0 && (
-        <div className="mt-3 p-2.5 bg-primary/10 dark:bg-primary/20 border border-primary/30 dark:border-primary/40 rounded text-xs">
-          <div className="font-bold text-primary dark:text-primary-light text-sm mb-1">
+        <div className="mt-3 p-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 rounded-lg text-xs">
+          <div className="font-bold text-indigo-600 dark:text-indigo-400 text-sm mb-1">
             Distance: {distance >= 1000 ? `${(distance / 1000).toFixed(2)} km` : `${distance} m`}
           </div>
-          <div className="text-gray-600 dark:text-slate-300">
+          <div className="text-slate-600 dark:text-slate-300 font-medium">
             Estimated time: {Math.max(1, Math.round(distance / (routeType === 'pedestrian' ? 80 : 250)))} min
           </div>
         </div>
@@ -207,7 +207,7 @@ export default function DirectionsPanel() {
         <button
           type="button"
           onClick={handleCalculateRoute}
-          className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white rounded font-bold text-xs transition-colors shadow"
+          className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xs transition-colors shadow-md shadow-indigo-600/20"
         >
           Find Route
         </button>
@@ -215,7 +215,7 @@ export default function DirectionsPanel() {
           <button
             type="button"
             onClick={clearRoute}
-            className="px-3 py-2 border border-gray-300 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-300 rounded font-semibold text-xs transition-colors"
+            className="px-3 py-2.5 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg font-semibold text-xs transition-colors"
           >
             Clear
           </button>

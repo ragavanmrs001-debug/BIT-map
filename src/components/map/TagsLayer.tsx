@@ -16,27 +16,27 @@ const tagsByLevel: Record<number, typeof zoomLevel4Tags> = {
   4: zoomLevel4Tags,
 };
 
-export default function TagsLayer() {
+export default React.memo(function TagsLayer() {
   const { zoomLevel, selectPlace } = useMapStore();
 
   const tags = tagsByLevel[zoomLevel] || [];
 
   return (
-    <div className="tags">
+    <div className="tags pointer-events-none absolute inset-0 z-[110]">
       {tags.map((tag) => (
         <div
           key={tag.id}
-          className="tag"
           id={tag.id}
           style={{ top: tag.top, left: tag.left }}
           onClick={(e) => {
             e.stopPropagation();
             selectPlace(tag.id);
           }}
+          className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-auto cursor-pointer px-2 py-0.5 rounded-md text-[11px] font-bold tracking-tight text-slate-800 bg-white/92 dark:bg-slate-900/92 dark:text-slate-100 shadow-md border border-slate-200/80 dark:border-slate-700/80 backdrop-blur-sm hover:scale-110 hover:z-[130] hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 transition-all duration-150 whitespace-nowrap"
         >
           {tag.name}
         </div>
       ))}
     </div>
   );
-}
+});

@@ -14,9 +14,8 @@ const categoryColors: Record<string, { fill: string; stroke: string; glow: strin
   facility: { fill: 'rgba(6, 182, 212, 0.25)', stroke: '#06B6D4', glow: 'rgba(6, 182, 212, 0.6)' },
 };
 
-export default function ShapesLayer() {
-  const { zoomLevel, selectedPlaceId, hoveredPlaceId, selectPlace, setHoveredPlaceId } =
-    useMapStore();
+export default React.memo(function ShapesLayer() {
+  const { zoomLevel, selectedPlaceId, selectPlace } = useMapStore();
 
   const { width, height } = getMapDimensions(zoomLevel);
   const scale = 1 / Math.pow(ZOOM_FACTOR, MAX_ZOOM - zoomLevel);
@@ -34,16 +33,8 @@ export default function ShapesLayer() {
         zIndex: 104,
       }}
     >
-      <defs>
-        <filter id="shape-glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-
       {campusShapes.map((shape) => {
         const isSelected = selectedPlaceId === shape.id;
-        const isHovered = hoveredPlaceId === shape.id;
         const colors = categoryColors[shape.category] || categoryColors.academic;
 
         const scaledPoints = shape.points
@@ -61,31 +52,29 @@ export default function ShapesLayer() {
               e.stopPropagation();
               selectPlace(shape.id);
             }}
-            onMouseEnter={() => setHoveredPlaceId(shape.id)}
-            onMouseLeave={() => setHoveredPlaceId(null)}
+            className="group"
           >
             {/* Building Polygon Shape */}
             <polygon
               points={scaledPoints}
-              fill={isSelected || isHovered ? colors.fill : 'rgba(123, 104, 238, 0.08)'}
-              stroke={isSelected ? '#ffffff' : isHovered ? colors.stroke : colors.stroke}
-              strokeWidth={isSelected ? 3.5 : isHovered ? 2.5 : 1.2}
+              fill={isSelected ? colors.fill : 'rgba(123, 104, 238, 0.08)'}
+              stroke={isSelected ? '#ffffff' : colors.stroke}
+              strokeWidth={isSelected ? 3.5 : 1.5}
               strokeDasharray={isSelected ? 'none' : '4 2'}
-              strokeOpacity={isSelected ? 1 : isHovered ? 0.9 : 0.4}
-              filter={isSelected || isHovered ? 'url(#shape-glow)' : undefined}
-              className="transition-all duration-200"
+              strokeOpacity={isSelected ? 1 : 0.45}
+              className="transition-colors duration-150 group-hover:fill-indigo-500/25 group-hover:stroke-indigo-500 group-hover:stroke-opacity-100"
             />
 
-            {/* Center Label Pill on hover or select */}
-            {(isSelected || isHovered) && (
+            {/* Center Label Pill on select */}
+            {isSelected && (
               <g transform={`translate(${centerX}, ${centerY - 10})`}>
                 <rect
-                  x="-60"
+                  x="-65"
                   y="-14"
-                  width="120"
-                  height="22"
-                  rx="11"
-                  fill="rgba(15, 23, 42, 0.85)"
+                  width="130"
+                  height="24"
+                  rx="12"
+                  fill="rgba(15, 23, 42, 0.92)"
                   stroke={colors.stroke}
                   strokeWidth="1.5"
                 />
@@ -96,7 +85,7 @@ export default function ShapesLayer() {
                   fill="#ffffff"
                   fontSize="11"
                   fontFamily="'Quicksand', sans-serif"
-                  fontWeight="600"
+                  fontWeight="700"
                 >
                   {shape.name.length > 16 ? shape.name.slice(0, 15) + '…' : shape.name}
                 </text>
@@ -107,4 +96,4 @@ export default function ShapesLayer() {
       })}
     </svg>
   );
-}
+});

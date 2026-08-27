@@ -17,7 +17,7 @@ const legendsByLevel: Record<number, typeof legends4> = {
   4: legends4,
 };
 
-export default function LegendsLayer() {
+export default React.memo(function LegendsLayer() {
   const { zoomLevel } = useMapStore();
 
   const legends = legendsByLevel[zoomLevel] || [];
@@ -38,4 +38,4 @@ export default function LegendsLayer() {
       ))}
     </div>
   );
-}
+});

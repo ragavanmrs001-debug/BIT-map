@@ -17,6 +17,7 @@ import LegendsLayer from './LegendsLayer';
 import ShapesLayer from './ShapesLayer';
 import PinMarker from './PinMarker';
 import RouteOverlay from './RouteOverlay';
+import { LocationMarkerCanvas } from './LocationMarker';
 
 export default function MapContainer() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -78,10 +79,10 @@ export default function MapContainer() {
     [zoomLevel, setZoomLevel, stopInertia]
   );
 
-  // Mouse wheel zoom centered on cursor
+  // Mouse wheel zoom (strictly when holding Ctrl/Cmd key to isolate scroll drag)
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
-      if (e.ctrlKey || Math.abs(e.deltaY) > 30) {
+      if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         stopInertia();
         if (e.deltaY < 0) {
@@ -94,8 +95,12 @@ export default function MapContainer() {
     [handleZoom, stopInertia]
   );
 
-  // Global window mousemove & mouseup listeners for Google Maps-grade kinetic inertia momentum
+  // Global window mousemove & mouseup listeners for 60fps kinetic inertia momentum
   useEffect(() => {
+    let rafId: number | null = null;
+    let pendingX = 0;
+    let pendingY = 0;
+
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (!isMouseDown.current || !containerRef.current) return;
 
@@ -104,12 +109,7 @@ export default function MapContainer() {
       const dx = e.pageX - lastMousePos.current.x;
       const dy = e.pageY - lastMousePos.current.y;
 
-      // Track velocity for release momentum
-      velocity.current = {
-        vx: dx / dt,
-        vy: dy / dt,
-      };
-
+      velocity.current = { vx: dx / dt, vy: dy / dt };
       lastMousePos.current = { x: e.pageX, y: e.pageY, time: now };
 
       const totalWalkX = e.pageX - startX.current;
@@ -120,13 +120,26 @@ export default function MapContainer() {
       }
 
       if (isDragging.current) {
-        e.preventDefault();
-        containerRef.current.scrollLeft = scrollLeftStart.current - totalWalkX;
-        containerRef.current.scrollTop = scrollTopStart.current - totalWalkY;
+        pendingX = scrollLeftStart.current - totalWalkX;
+        pendingY = scrollTopStart.current - totalWalkY;
+
+        if (rafId === null) {
+          rafId = requestAnimationFrame(() => {
+            if (containerRef.current) {
+              containerRef.current.scrollLeft = pendingX;
+              containerRef.current.scrollTop = pendingY;
+            }
+            rafId = null;
+          });
+        }
       }
     };
 
     const handleGlobalMouseUp = () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
       if (!isMouseDown.current) return;
       isMouseDown.current = false;
 
@@ -145,9 +158,9 @@ export default function MapContainer() {
           containerRef.current.scrollLeft -= vx;
           containerRef.current.scrollTop -= vy;
 
-          // Friction deceleration (0.93 decay)
-          vx *= 0.93;
-          vy *= 0.93;
+          // Friction deceleration (0.92 decay)
+          vx *= 0.92;
+          vy *= 0.92;
 
           inertiaAnimationId.current = requestAnimationFrame(applyInertia);
         };
@@ -161,10 +174,11 @@ export default function MapContainer() {
       }, 50);
     };
 
-    window.addEventListener('mousemove', handleGlobalMouseMove, { passive: false });
+    window.addEventListener('mousemove', handleGlobalMouseMove, { passive: true });
     window.addEventListener('mouseup', handleGlobalMouseUp);
 
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
       window.removeEventListener('mousemove', handleGlobalMouseMove);
       window.removeEventListener('mouseup', handleGlobalMouseUp);
       stopInertia();
@@ -190,7 +204,7 @@ export default function MapContainer() {
     scrollTopStart.current = containerRef.current?.scrollTop || 0;
   };
 
-  // Touch handlers for mobile pan & tap
+  // Touch handlers for mobile pan & long-press pin drop (no accidental zoom on touch drag)
   const handleTouchStart = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest('.tag, button, input, select, .place-details, .directions-panel')) {
@@ -198,17 +212,6 @@ export default function MapContainer() {
     }
 
     stopInertia();
-    const now = Date.now();
-    if (now - lastTapTime.current < 300) {
-      if (zoomLevel === MAX_ZOOM) {
-        handleZoom('out');
-      } else {
-        handleZoom('in');
-      }
-      lastTapTime.current = 0;
-      return;
-    }
-    lastTapTime.current = now;
 
     // Long press for pin drop
     const touch = e.touches[0];
@@ -350,6 +353,9 @@ export default function MapContainer() {
 
         {/* Route */}
         <RouteOverlay />
+
+        {/* Real-time GPS Location Canvas Marker */}
+        <LocationMarkerCanvas />
       </div>
     </div>
   );

@@ -20,6 +20,10 @@ body {
   margin: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
+  will-change: scroll-position, transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout style paint;
 }
 
 .bg-map::-webkit-scrollbar {
@@ -28,6 +32,11 @@ body {
 
 .bg-map img {
   position: absolute;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  image-rendering: -webkit-optimize-contrast;
+  pointer-events: none;
 }
 
 /* === Tags (POI labels) === */
