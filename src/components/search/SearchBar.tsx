@@ -149,7 +149,7 @@ export default function SearchBar() {
         const setFrom = useNavigationStore.getState().setFrom;
         const setTo = useNavigationStore.getState().setTo;
 
-        setFrom('main-gate');
+        setFrom('my-location');
         setTo(nearest.restroom.id);
         setRoute(
           nearest.route.path,

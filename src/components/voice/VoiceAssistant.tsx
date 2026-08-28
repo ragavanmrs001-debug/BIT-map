@@ -17,7 +17,7 @@ export default function VoiceAssistant() {
   const [responseMessage, setResponseMessage] = useState('');
   const [voiceTrackerEnabled, setVoiceTrackerEnabled] = useState(true);
 
-  const { selectPlace, setZoomLevel, toggleTheme, toggleLayer } = useMapStore();
+  const { selectPlace, setZoomLevel, toggleTheme, toggleLayer, showDetails } = useMapStore();
   const recognitionRef = useRef<any>(null);
 
   // Initialize Speech Recognition API (English en-US)
@@ -105,7 +105,7 @@ export default function VoiceAssistant() {
         const setFrom = useNavigationStore.getState().setFrom;
         const setTo = useNavigationStore.getState().setTo;
 
-        setFrom('main-gate');
+        setFrom('my-location');
         setTo(nearest.restroom.id);
         setRoute(
           nearest.route.path,
@@ -203,6 +203,9 @@ export default function VoiceAssistant() {
   const handleAutoNavigate = (placeId: string) => {
     const tag = zoomLevel4Tags.find((t) => t.id === placeId);
     setZoomLevel(MAX_ZOOM);
+    useNavigationStore.getState().setFrom('my-location');
+    useNavigationStore.getState().setTo(placeId);
+    useMapStore.getState().setShowDirections(true);
 
     const container = document.querySelector('.bg-map') as HTMLElement;
     if (container && tag) {
@@ -226,7 +229,7 @@ export default function VoiceAssistant() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         title="JARVIS Campus Voice AI"
-        className={`fixed right-5 bottom-[335px] z-[150] w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl border transition-all duration-300 ${isListening || isSpeaking
+        className={`fixed right-3 sm:right-5 ${showDetails ? 'bottom-[44vh]' : 'bottom-20 sm:bottom-28'} z-[150] w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shadow-xl border transition-all duration-300 ${isListening || isSpeaking
           ? 'bg-red-500 border-red-400 text-white animate-pulse shadow-red-500/50 scale-110'
           : 'bg-indigo-600 border-indigo-500 text-white shadow-indigo-600/40 hover:scale-105'
           }`}
@@ -236,7 +239,7 @@ export default function VoiceAssistant() {
 
       {/* Voice Assistant Panel Modal */}
       {isOpen && (
-        <div className="fixed right-5 bottom-[395px] z-[155] w-80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className={`fixed right-3 sm:right-5 ${showDetails ? 'bottom-[52vh]' : 'bottom-32 sm:bottom-44'} z-[155] w-[90vw] sm:w-80 max-w-sm bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-2xl animate-in fade-in slide-in-from-bottom-5 duration-200`}>
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
             <div className="flex items-center gap-2">
               <div

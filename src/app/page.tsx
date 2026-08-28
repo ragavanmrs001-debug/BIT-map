@@ -76,11 +76,8 @@ function MapView() {
       <DirectionsPanel />
       <FloatingNavCard />
 
-      {/* Zoom and Layer Action Controls */}
+      {/* Zoom, Compass Rotation, Layer and Location Action Controls */}
       <ZoomControls />
-
-      {/* Real-time GPS Blue Dot Location Marker Button */}
-      <LocationMarkerButton />
 
       {/* Floating JARVIS Voice AI Assistant */}
       <VoiceAssistant />

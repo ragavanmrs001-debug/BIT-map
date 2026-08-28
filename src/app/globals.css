@@ -510,38 +510,70 @@ body {
 
 /* === Mobile & PC Responsive Breakpoints === */
 @media screen and (max-width: 640px) {
+  .search-bar {
+    padding: 6px 8px;
+    height: auto;
+  }
+
   .search-wrapper {
-    width: 94%;
+    width: 95vw;
+    max-width: 100%;
+    border-radius: 16px;
+    padding: 3px;
+  }
+
+  .search-input {
+    font-size: 0.82rem;
+    padding: 7px 32px 7px 10px;
   }
 
   .icon-button {
-    height: 42px;
-    width: 42px;
+    height: 34px;
+    width: 34px;
+    border-radius: 10px;
   }
 
   .place-details {
     width: 100vw;
-    border-radius: 20px 20px 0 0;
+    border-radius: 24px 24px 0 0;
+    padding: 16px 14px;
+    max-height: 42vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .place-details.open {
-    height: 48vh;
+    height: 42vh;
   }
 
   .get-down-btn.open {
-    bottom: calc(48vh - 22px);
+    bottom: calc(42vh - 20px);
   }
 
   .zoom-buttons.shifted,
   .layer-button.shifted {
-    bottom: 50vh;
+    bottom: 44vh;
   }
 
   .directions-panel {
-    top: 80px;
+    top: 72px;
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    width: 92vw;
+    width: 94vw;
+    max-height: 72vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 20px;
+    padding: 14px;
+  }
+
+  /* Compact button micro-interactions */
+  button, a {
+    touch-action: manipulation;
+  }
+
+  button:active {
+    transform: scale(0.96);
   }
 }

@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigationStore, type RouteType } from '@/stores/navigation-store';
 import { useMapStore } from '@/stores/map-store';
 import { zoomLevel4Tags } from '@/data/zoom-level-4';
+import { buildings } from '@/data/buildings';
 import { calculateRoute } from '@/lib/dijkstra';
 import { MAX_ZOOM } from '@/lib/constants';
 
 export default function DirectionsPanel() {
-  const { showDirections, setShowDirections, isPinned, pinX, pinY, setZoomLevel } = useMapStore();
+  const { showDirections, setShowDirections, isPinned, pinX, pinY, setZoomLevel, userCanvasPos } = useMapStore();
   const {
     from,
     to,
@@ -22,22 +23,41 @@ export default function DirectionsPanel() {
     clearRoute,
   } = useNavigationStore();
 
-  const [fromSelection, setFromSelection] = useState<string>(from || 'main-gate');
+  const [fromSelection, setFromSelection] = useState<string>(from || 'my-location');
   const [toSelection, setToSelection] = useState<string>(to || 'sf-block');
   const [error, setError] = useState<string | null>(null);
 
-  if (!showDirections) return null;
+  // Sync state when store's from/to changes
+  React.useEffect(() => {
+    if (from) setFromSelection(from);
+    if (to) setToSelection(to);
+  }, [from, to]);
 
-  // Build sorted list of places for dropdowns
-  const placeOptions = zoomLevel4Tags
-    .map((tag) => ({ id: tag.id, name: tag.name }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  // Build combined list of places (tags + buildings) for dropdowns
+  const placeOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    zoomLevel4Tags.forEach((t) => map.set(t.id, t.name));
+    buildings.forEach((b) => map.set(b.id, b.name));
 
-  const handleCalculateRoute = () => {
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
+
+  const handleCalculateRoute = (overrideFrom?: string, overrideTo?: string) => {
     setError(null);
+    const activeFrom = overrideFrom || fromSelection || from || 'my-location';
+    const activeTo = overrideTo || toSelection || to || 'sf-block';
 
-    let fromArg: string | { x: number; y: number } = fromSelection;
-    if (fromSelection === 'pinned-location') {
+    let fromArg: string | { x: number; y: number } = activeFrom;
+    if (activeFrom === 'my-location') {
+      if (userCanvasPos) {
+        fromArg = { x: userCanvasPos.x, y: userCanvasPos.y };
+      } else {
+        // Fallback default campus quad center if live GPS is pending permission
+        fromArg = { x: 1700, y: 1950 };
+      }
+    } else if (activeFrom === 'pinned-location') {
       if (!isPinned) {
         setError('Please drop a pin on the map first (long press or right click).');
         return;
@@ -45,8 +65,14 @@ export default function DirectionsPanel() {
       fromArg = { x: pinX, y: pinY };
     }
 
-    let toArg: string | { x: number; y: number } = toSelection;
-    if (toSelection === 'pinned-location') {
+    let toArg: string | { x: number; y: number } = activeTo;
+    if (activeTo === 'my-location') {
+      if (userCanvasPos) {
+        toArg = { x: userCanvasPos.x, y: userCanvasPos.y };
+      } else {
+        toArg = { x: 1700, y: 1950 };
+      }
+    } else if (activeTo === 'pinned-location') {
       if (!isPinned) {
         setError('Please drop a pin on the map first (long press or right click).');
         return;
@@ -76,10 +102,24 @@ export default function DirectionsPanel() {
     }
   };
 
+  // Auto calculate route when panel opens with active from & to parameters
+  React.useEffect(() => {
+    if (showDirections && from && to) {
+      setFromSelection(from);
+      setToSelection(to);
+      handleCalculateRoute(from, to);
+    }
+    // eslint-disable-next-line react-hooks-exhaustive-deps
+  }, [showDirections, from, to]);
+
+  if (!showDirections) return null;
+
   const handleSwap = () => {
     const temp = fromSelection;
     setFromSelection(toSelection);
     setToSelection(temp);
+    setFrom(toSelection);
+    setTo(temp);
     if (isActive) {
       clearRoute();
     }
@@ -142,6 +182,7 @@ export default function DirectionsPanel() {
             }}
             className="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
           >
+            <option value="my-location">🎯 My Live Location</option>
             {isPinned && <option value="pinned-location">📍 Pinned Location</option>}
             {placeOptions.map((p) => (
               <option key={`from-${p.id}`} value={p.id}>
@@ -172,6 +213,7 @@ export default function DirectionsPanel() {
             }}
             className="w-full p-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
           >
+            <option value="my-location">🎯 My Live Location</option>
             {isPinned && <option value="pinned-location">📍 Pinned Location</option>}
             {placeOptions.map((p) => (
               <option key={`to-${p.id}`} value={p.id}>
@@ -205,7 +247,7 @@ export default function DirectionsPanel() {
       <div className="flex gap-2 mt-4">
         <button
           type="button"
-          onClick={handleCalculateRoute}
+          onClick={() => handleCalculateRoute()}
           className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs transition-colors shadow-md shadow-indigo-600/20"
         >
           Find Route

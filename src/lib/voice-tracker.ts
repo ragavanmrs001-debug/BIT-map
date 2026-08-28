@@ -80,6 +80,8 @@ export class VoiceTrackerEngine {
   private lastStationaryAnnouncementTime = 0;
   private enabled = true;
   private language: 'en-US' | 'ta-IN' = 'en-US';
+  private lastSpokenText = '';
+  private lastSpokenTime = 0;
 
   constructor() {}
 
@@ -141,9 +143,18 @@ export class VoiceTrackerEngine {
     return { landmark: nearest, distanceMeters: minDistance };
   }
 
-  // Voice synthesis speaker
-  public speak(text: string) {
-    if (!this.enabled) return;
+  // Voice synthesis speaker with deduplication filter
+  public speak(text: string, force = false) {
+    if (!this.enabled || !text) return;
+    const now = Date.now();
+    // Deduplicate identical speech requests within 10 seconds unless forced
+    if (!force && text === this.lastSpokenText && now - this.lastSpokenTime < 10000) {
+      return;
+    }
+
+    this.lastSpokenText = text;
+    this.lastSpokenTime = now;
+
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);

@@ -26,6 +26,7 @@ export default function FloatingNavCard() {
 
   const { setZoomLevel } = useMapStore();
   const lastRecalibrateTime = useRef(0);
+  const lastSpokenStepIndex = useRef<number | null>(null);
 
   const currentStep = steps[currentStepIndex];
 
@@ -47,8 +48,9 @@ export default function FloatingNavCard() {
       });
     }
 
-    // Speak turn-by-turn navigation voice instruction
-    if (globalVoiceTracker.isEnabled()) {
+    // Speak turn-by-turn navigation voice instruction ONLY once per step transition
+    if (globalVoiceTracker.isEnabled() && lastSpokenStepIndex.current !== currentStepIndex) {
+      lastSpokenStepIndex.current = currentStepIndex;
       globalVoiceTracker.speak(`${currentStep.text}. ${currentStep.instruction}`);
     }
   }, [currentStepIndex, isActive, currentStep, setZoomLevel]);

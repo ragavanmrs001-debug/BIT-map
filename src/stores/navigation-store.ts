@@ -42,7 +42,7 @@ interface NavigationState {
 }
 
 export const useNavigationStore = create<NavigationState>((set, get) => ({
-  from: null,
+  from: 'my-location',
   to: null,
   routeType: 'pedestrian',
   path: [],
@@ -102,7 +102,7 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
       startPoint: null,
       endPoint: null,
       isActive: false,
-      from: null,
+      from: 'my-location',
       to: null,
     }),
 }));

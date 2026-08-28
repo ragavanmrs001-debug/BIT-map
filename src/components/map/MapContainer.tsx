@@ -35,10 +35,11 @@ export default function MapContainer() {
   const velocity = useRef({ vx: 0, vy: 0 });
   const inertiaAnimationId = useRef<number | null>(null);
 
-  const { zoomLevel, activeLayer, theme, setZoomLevel, setPin, clearPin, isPinned } =
+  const { zoomLevel, activeLayer, theme, setZoomLevel, setPin, clearPin, isPinned, mapRotation, rotateMapBy } =
     useMapStore();
 
   const { width, height } = getMapDimensions(zoomLevel);
+  const touchStartAngle = useRef(0);
 
   // Stop any running inertia momentum glide
   const stopInertia = useCallback(() => {
@@ -217,6 +218,10 @@ export default function MapContainer() {
       return Math.sqrt(dx * dx + dy * dy);
     };
 
+    const getAngle = (t1: Touch, t2: Touch) => {
+      return Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX) * (180 / Math.PI);
+    };
+
     const handleNativeTouchStart = (e: TouchEvent) => {
       const target = e.target as HTMLElement;
       if (target.closest('.tag, button, input, select, .place-details, .directions-panel')) {
@@ -238,6 +243,7 @@ export default function MapContainer() {
       } else if (e.touches.length === 2) {
         isTouchDragging.current = false;
         touchStartDist.current = getDistance(e.touches[0], e.touches[1]);
+        touchStartAngle.current = getAngle(e.touches[0], e.touches[1]);
       }
     };
 
@@ -278,12 +284,21 @@ export default function MapContainer() {
       } else if (e.touches.length === 2) {
         e.preventDefault();
         const dist = getDistance(e.touches[0], e.touches[1]);
-        const delta = dist - touchStartDist.current;
+        const deltaDist = dist - touchStartDist.current;
+        const currentAngle = getAngle(e.touches[0], e.touches[1]);
+        const deltaAngle = currentAngle - touchStartAngle.current;
         const now = performance.now();
 
-        if (Math.abs(delta) > 55 && now - lastWheelTime.current > 350) {
+        // Twist map rotation gesture
+        if (Math.abs(deltaAngle) > 2) {
+          rotateMapBy(deltaAngle);
+          touchStartAngle.current = currentAngle;
+        }
+
+        // Pinch zoom gesture
+        if (Math.abs(deltaDist) > 55 && now - lastWheelTime.current > 350) {
           lastWheelTime.current = now;
-          if (delta > 0) {
+          if (deltaDist > 0) {
             handleZoom('in');
           } else {
             handleZoom('out');
@@ -440,12 +455,14 @@ export default function MapContainer() {
     >
       {/* Centered Map Wrapper with Full Canvas Panning Space */}
       <div
-        className="relative"
+        className="relative transition-transform duration-100 ease-out"
         style={{
           width: `${width}px`,
           height: `${height}px`,
           minWidth: `${width}px`,
           minHeight: `${height}px`,
+          transform: mapRotation !== 0 ? `rotate(${mapRotation}deg)` : undefined,
+          transformOrigin: 'center center',
         }}
       >
         {/* SVG Map Layer */}

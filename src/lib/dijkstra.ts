@@ -1,3 +1,4 @@
+import { buildings } from '@/data/buildings';
 import { edges as pedestrianEdges } from '@/data/edges';
 import { vehicleEdges } from '@/data/vehicle-edges';
 import { junctionPoints as pedestrianJunctions } from '@/data/junction-points';
@@ -51,6 +52,16 @@ export function findJunctionForPlace(
     const left = parseFloat(tag.left);
     const top = parseFloat(tag.top);
     return findNearestJunction(left, top, junctions);
+  }
+
+  const building = buildings.find((b) => b.id === placeId);
+  if (building) {
+    const matchingTag = zoomLevel4Tags.find(
+      (t) => t.name.toLowerCase() === building.name.toLowerCase() || t.id === building.id
+    );
+    if (matchingTag) {
+      return findNearestJunction(parseFloat(matchingTag.left), parseFloat(matchingTag.top), junctions);
+    }
   }
 
   return junctions[0]?.id ?? 1;

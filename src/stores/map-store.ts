@@ -29,8 +29,12 @@ interface MapState {
   // Instruction modal
   showInstruction: boolean;
 
-  // Directions
+  // Directions & Live GPS Canvas Coordinates
   showDirections: boolean;
+  userCanvasPos: { x: number; y: number } | null;
+
+  // Rotation (in degrees 0-360)
+  mapRotation: number;
 
   // Actions
   toggleTheme: () => void;
@@ -45,6 +49,10 @@ interface MapState {
   clearSelection: () => void;
   setShowInstruction: (show: boolean) => void;
   setShowDirections: (show: boolean) => void;
+  setUserCanvasPos: (pos: { x: number; y: number } | null) => void;
+  setMapRotation: (angle: number | ((prev: number) => number)) => void;
+  rotateMapBy: (deltaDegrees: number) => void;
+  resetRotation: () => void;
 }
 
 export const useMapStore = create<MapState>((set) => ({
@@ -60,6 +68,8 @@ export const useMapStore = create<MapState>((set) => ({
   showDetails: false,
   showInstruction: true,
   showDirections: false,
+  userCanvasPos: null,
+  mapRotation: 0,
 
   toggleTheme: () =>
     set((state) => {
@@ -108,4 +118,18 @@ export const useMapStore = create<MapState>((set) => ({
   setShowInstruction: (show) => set({ showInstruction: show }),
 
   setShowDirections: (show) => set({ showDirections: show }),
+
+  setUserCanvasPos: (pos) => set({ userCanvasPos: pos }),
+
+  setMapRotation: (angle) =>
+    set((state) => ({
+      mapRotation: typeof angle === 'function' ? angle(state.mapRotation) : angle,
+    })),
+
+  rotateMapBy: (deltaDegrees) =>
+    set((state) => ({
+      mapRotation: (state.mapRotation + deltaDegrees + 360) % 360,
+    })),
+
+  resetRotation: () => set({ mapRotation: 0 }),
 }));

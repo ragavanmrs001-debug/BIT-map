@@ -17,7 +17,7 @@ const tagsByLevel: Record<number, typeof zoomLevel4Tags> = {
 };
 
 export default React.memo(function TagsLayer() {
-  const { zoomLevel, selectPlace } = useMapStore();
+  const { zoomLevel, selectPlace, mapRotation } = useMapStore();
 
   const tags = tagsByLevel[zoomLevel] || [];
 
@@ -27,12 +27,16 @@ export default React.memo(function TagsLayer() {
         <div
           key={tag.id}
           id={tag.id}
-          style={{ top: tag.top, left: tag.left }}
+          style={{
+            top: tag.top,
+            left: tag.left,
+            transform: mapRotation !== 0 ? `translate(-50%, -50%) rotate(${-mapRotation}deg)` : 'translate(-50%, -50%)',
+          }}
           onClick={(e) => {
             e.stopPropagation();
             selectPlace(tag.id);
           }}
-          className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-auto cursor-pointer px-2 py-0.5 rounded-md text-[11px] font-bold tracking-tight text-slate-800 bg-white/92 dark:bg-slate-900/92 dark:text-slate-100 shadow-md border border-slate-200/80 dark:border-slate-700/80 backdrop-blur-sm hover:scale-110 hover:z-[130] hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 transition-all duration-150 whitespace-nowrap"
+          className="absolute pointer-events-auto cursor-pointer px-2 py-0.5 rounded-md text-[11px] font-bold tracking-tight text-slate-800 bg-white/92 dark:bg-slate-900/92 dark:text-slate-100 shadow-md border border-slate-200/80 dark:border-slate-700/80 backdrop-blur-sm hover:scale-110 hover:z-[130] hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 transition-all duration-150 whitespace-nowrap"
         >
           {tag.name}
         </div>

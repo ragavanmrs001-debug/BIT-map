@@ -11,7 +11,7 @@ import FloorPlanModal from './FloorPlanModal';
 
 export default function PlaceDetails() {
   const { selectedPlaceId, showDetails, clearSelection, setShowDirections, setPin } = useMapStore();
-  const { setTo } = useNavigationStore();
+  const { setFrom, setTo } = useNavigationStore();
   const { isFavorite, toggleFavorite } = useFavoritesStore();
 
   const [activeFloor, setActiveFloor] = useState(0);
@@ -61,6 +61,7 @@ export default function PlaceDetails() {
 
   const handleNavigateHere = () => {
     if (selectedPlaceId) {
+      setFrom('my-location');
       setTo(selectedPlaceId);
       setShowDirections(true);
       clearSelection();

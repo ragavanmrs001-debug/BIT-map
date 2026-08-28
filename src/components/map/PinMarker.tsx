@@ -5,7 +5,7 @@ import { useMapStore } from '@/stores/map-store';
 import { PIN_ICON_PATH } from '@/lib/constants';
 
 export default function PinMarker() {
-  const { isPinned, pinX, pinY, zoomLevel } = useMapStore();
+  const { isPinned, pinX, pinY, zoomLevel, mapRotation } = useMapStore();
   const urlRef = useRef<HTMLInputElement>(null);
   const [copyText, setCopyText] = useState('Copy');
 
@@ -41,6 +41,8 @@ export default function PinMarker() {
           display: 'block',
           left: `${pinX - 16}px`,
           top: `${pinY - 36}px`,
+          transform: mapRotation !== 0 ? `rotate(${-mapRotation}deg)` : undefined,
+          transformOrigin: 'bottom center',
         }}
         onClick={(e) => e.stopPropagation()}
       />
@@ -52,7 +54,7 @@ export default function PinMarker() {
           display: 'block',
           left: `${pinX}px`,
           top: `${pinY + 2}px`,
-          transform: 'translateX(-50%)',
+          transform: mapRotation !== 0 ? `translateX(-50%) rotate(${-mapRotation}deg)` : 'translateX(-50%)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
