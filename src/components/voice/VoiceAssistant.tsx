@@ -1,12 +1,13 @@
-'use client';
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useMapStore } from '@/stores/map-store';
+import { useNavigationStore } from '@/stores/navigation-store';
 import { zoomLevel4Tags } from '@/data/zoom-level-4';
-import { MAX_ZOOM } from '@/lib/constants';
+import { MAX_ZOOM, MIN_ZOOM } from '@/lib/constants';
 import { globalVoiceTracker } from '@/lib/voice-tracker';
+import { findNearestRestroom } from '@/lib/restroom-service';
 
-const BACKEND_URL = 'http://localhost:8000/api/voice/command';
+const NEXT_API_URL = '/api/voice/command';
+const PYTHON_BACKEND_URL = 'http://localhost:8000/api/voice/command';
 
 export default function VoiceAssistant() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,12 +16,11 @@ export default function VoiceAssistant() {
   const [transcript, setTranscript] = useState('');
   const [responseMessage, setResponseMessage] = useState('');
   const [voiceTrackerEnabled, setVoiceTrackerEnabled] = useState(true);
-  const [language, setLanguage] = useState<'en-US' | 'ta-IN'>('en-US');
 
-  const { selectPlace, setZoomLevel } = useMapStore();
+  const { selectPlace, setZoomLevel, toggleTheme, toggleLayer } = useMapStore();
   const recognitionRef = useRef<any>(null);
 
-  // Initialize Speech Recognition API
+  // Initialize Speech Recognition API (English en-US)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const SpeechRecognition =
@@ -29,11 +29,11 @@ export default function VoiceAssistant() {
         const recognition = new SpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
-        recognition.lang = language;
+        recognition.lang = 'en-US';
 
         recognition.onstart = () => {
           setIsListening(true);
-          setTranscript(language === 'ta-IN' ? 'கேட்கிறது...' : 'Listening for command...');
+          setTranscript('Listening for command...');
         };
 
         recognition.onresult = async (event: any) => {
@@ -46,7 +46,7 @@ export default function VoiceAssistant() {
         recognition.onerror = (event: any) => {
           console.error('Speech recognition error:', event.error);
           setIsListening(false);
-          setTranscript(language === 'ta-IN' ? 'ஒலி கேட்கவில்லை. மீண்டும் முயலவும்.' : 'Could not hear audio. Please try again.');
+          setTranscript('Could not hear audio. Please try again.');
         };
 
         recognition.onend = () => {
@@ -56,7 +56,7 @@ export default function VoiceAssistant() {
         recognitionRef.current = recognition;
       }
     }
-  }, [language]);
+  }, []);
 
   const toggleListening = () => {
     if (isListening) {
@@ -67,21 +67,14 @@ export default function VoiceAssistant() {
     }
   };
 
-  const handleLanguageChange = (newLang: 'en-US' | 'ta-IN') => {
-    setLanguage(newLang);
-    globalVoiceTracker.setLanguage(newLang);
-    const msg = newLang === 'ta-IN' ? 'தமிழ் குரல் முறை இயக்கப்பட்டன.' : 'English voice assistant activated.';
-    speakClientSide(msg);
-  };
-
   const toggleVoiceTracker = () => {
     const nextState = !voiceTrackerEnabled;
     setVoiceTrackerEnabled(nextState);
     globalVoiceTracker.setEnabled(nextState);
     if (nextState) {
-      speakClientSide(language === 'ta-IN' ? 'குரல் வழிகாட்டுதல் இயக்கப்பட்டது.' : 'Voice navigation guidance enabled.');
+      speakClientSide('Voice navigation guidance enabled.');
     } else {
-      speakClientSide(language === 'ta-IN' ? 'குரல் வழிகாட்டுதல் முடக்கப்பட்டது.' : 'Voice navigation muted.');
+      speakClientSide('Voice navigation muted.');
     }
   };
 
@@ -91,59 +84,118 @@ export default function VoiceAssistant() {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
-      utterance.lang = language;
+      utterance.lang = 'en-US';
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
       window.speechSynthesis.speak(utterance);
     }
   };
 
+  const executeMapCommand = (action: string, targetId?: string | null) => {
+    const container = document.querySelector('.bg-map') as HTMLElement;
+
+    if (action === 'nearest_restroom') {
+      const currentX = container ? container.scrollLeft + window.innerWidth / 2 : 1700;
+      const currentY = container ? container.scrollTop + window.innerHeight / 2 : 1950;
+      const nearest = findNearestRestroom(currentX, currentY);
+
+      if (nearest) {
+        setZoomLevel(MAX_ZOOM);
+        const setRoute = useNavigationStore.getState().setRoute;
+        const setFrom = useNavigationStore.getState().setFrom;
+        const setTo = useNavigationStore.getState().setTo;
+
+        setFrom('main-gate');
+        setTo(nearest.restroom.id);
+        setRoute(
+          nearest.route.path,
+          nearest.route.nodePath.map((n) => ({ x: n.left, y: n.top })),
+          nearest.route.steps,
+          nearest.route.distance,
+          nearest.route.startingPoint,
+          nearest.route.endingPoint
+        );
+
+        if (container) {
+          container.scrollTo({
+            left: nearest.restroom.x - window.innerWidth / 2,
+            top: nearest.restroom.y - window.innerHeight / 2,
+            behavior: 'smooth',
+          });
+        }
+        setTimeout(() => selectPlace(nearest.restroom.id), 300);
+      }
+    } else if (action === 'navigate' && targetId) {
+      handleAutoNavigate(targetId);
+    } else if (action === 'zoom_in') {
+      setZoomLevel(MAX_ZOOM);
+    } else if (action === 'zoom_out') {
+      setZoomLevel(MIN_ZOOM);
+    } else if (action === 'recenter') {
+      if (container) {
+        container.scrollTo({ top: 400, left: 200, behavior: 'smooth' });
+      }
+    } else if (action === 'toggle_dark') {
+      toggleTheme();
+    } else if (action === 'toggle_layer') {
+      toggleLayer();
+    }
+  };
+
   const handleProcessCommand = async (commandText: string) => {
     try {
-      // 1. Call Python JARVIS FastAPI Server
-      const res = await fetch(BACKEND_URL, {
+      // 1. Try Next.js native serverless API (Vercel compatible)
+      let res = await fetch(NEXT_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: commandText, lang: language }),
+        body: JSON.stringify({ query: commandText }),
       });
+
+      if (!res.ok) {
+        // Fallback to Python server if local API unready
+        res = await fetch(PYTHON_BACKEND_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: commandText }),
+        });
+      }
 
       if (res.ok) {
         const data = await res.json();
         setResponseMessage(data.response_text);
 
-        // Auto-navigate map if building is returned
-        if (data.target_place_id) {
-          handleAutoNavigate(data.target_place_id);
-        }
+        // Speak response out loud
+        speakClientSide(data.response_text);
 
-        // Play Python JARVIS Audio response if available
-        if (data.audio_base64) {
-          const audio = new Audio(data.audio_base64);
-          audio.onplay = () => setIsSpeaking(true);
-          audio.onended = () => setIsSpeaking(false);
-          audio.play().catch(() => speakClientSide(data.response_text));
-        } else {
-          speakClientSide(data.response_text);
+        // Simultaneously execute real-time map command
+        if (data.action || data.target_place_id) {
+          executeMapCommand(data.action || 'navigate', data.target_place_id);
         }
       } else {
-        throw new Error('Backend offline');
+        throw new Error('API offline');
       }
     } catch (err) {
-      // Offline fallback: Process locally
-      console.warn('JARVIS Backend API offline, using browser fallback:', err);
+      // Offline fallback: Client-side NLP matching
+      console.warn('JARVIS API offline, executing client fallback:', err);
       const lower = commandText.toLowerCase();
 
-      // Check campus keywords locally
-      const tagMatch = zoomLevel4Tags.find((t) => lower.includes(t.name.toLowerCase()));
-      if (tagMatch) {
-        const reply = language === 'ta-IN' ? `${tagMatch.name} பகுதிக்கு வழிகாட்டப்படுகிறது.` : `Navigating to ${tagMatch.name}, sir.`;
+      if (lower.includes('restroom') || lower.includes('toilet') || lower.includes('washroom')) {
+        const reply = 'Locating the nearest restroom from your position, sir.';
         setResponseMessage(reply);
         speakClientSide(reply);
-        handleAutoNavigate(tagMatch.id);
+        executeMapCommand('nearest_restroom');
       } else {
-        const reply = language === 'ta-IN' ? `நான் கேட்டது: ${commandText}` : `I heard: ${commandText}. Operating in browser voice mode.`;
-        setResponseMessage(reply);
-        speakClientSide(reply);
+        const tagMatch = zoomLevel4Tags.find((t) => lower.includes(t.name.toLowerCase()));
+        if (tagMatch) {
+          const reply = `Navigating to ${tagMatch.name}, sir.`;
+          setResponseMessage(reply);
+          speakClientSide(reply);
+          executeMapCommand('navigate', tagMatch.id);
+        } else {
+          const reply = `I heard "${commandText}". Processing campus query.`;
+          setResponseMessage(reply);
+          speakClientSide(reply);
+        }
       }
     }
   };
@@ -174,28 +226,26 @@ export default function VoiceAssistant() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         title="JARVIS Campus Voice AI"
-        className={`fixed right-5 bottom-24 z-[150] w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl border transition-all duration-300 ${
-          isListening || isSpeaking
-            ? 'bg-red-500 border-red-400 text-white animate-pulse shadow-red-500/50 scale-110'
-            : 'bg-indigo-600 border-indigo-500 text-white shadow-indigo-600/40 hover:scale-105'
-        }`}
+        className={`fixed right-5 bottom-[335px] z-[150] w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl border transition-all duration-300 ${isListening || isSpeaking
+          ? 'bg-red-500 border-red-400 text-white animate-pulse shadow-red-500/50 scale-110'
+          : 'bg-indigo-600 border-indigo-500 text-white shadow-indigo-600/40 hover:scale-105'
+          }`}
       >
         <span className="text-xl">🎙️</span>
       </button>
 
       {/* Voice Assistant Panel Modal */}
       {isOpen && (
-        <div className="fixed right-5 bottom-40 z-[150] w-80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed right-5 bottom-[395px] z-[155] w-80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl animate-in fade-in slide-in-from-bottom-5 duration-200">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
             <div className="flex items-center gap-2">
               <div
-                className={`w-3 h-3 rounded-full ${
-                  isListening
-                    ? 'bg-red-500 animate-ping'
-                    : isSpeaking
+                className={`w-3 h-3 rounded-full ${isListening
+                  ? 'bg-red-500 animate-ping'
+                  : isSpeaking
                     ? 'bg-emerald-500 animate-pulse'
                     : 'bg-indigo-500'
-                }`}
+                  }`}
               />
               <span className="font-bold text-sm text-slate-800 dark:text-slate-100">
                 JARVIS Campus Voice AI
@@ -209,50 +259,30 @@ export default function VoiceAssistant() {
             </button>
           </div>
 
-          {/* Bilingual Language Selector */}
-          <div className="flex items-center gap-2 mb-3">
-            <button
-              onClick={() => handleLanguageChange('en-US')}
-              className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                language === 'en-US'
-                  ? 'bg-indigo-600 text-white shadow-md'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}
-            >
-              🇺🇸 English
-            </button>
-            <button
-              onClick={() => handleLanguageChange('ta-IN')}
-              className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                language === 'ta-IN'
-                  ? 'bg-indigo-600 text-white shadow-md'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}
-            >
-              🇮🇳 தமிழ் (Tamil)
-            </button>
+          {/* English Voice AI Mode Indicator */}
+          <div className="flex items-center justify-center py-1.5 px-3 mb-3 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300">
+            🎙️ English JARVIS Voice Assistant Active
           </div>
 
           {/* Central Pulsing Mic Button */}
           <div className="flex flex-col items-center my-3">
             <button
               onClick={toggleListening}
-              className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-xl transition-all duration-300 ${
-                isListening
-                  ? 'bg-red-500 text-white ring-8 ring-red-500/20 animate-pulse scale-105'
-                  : isSpeaking
+              className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-xl transition-all duration-300 ${isListening
+                ? 'bg-red-500 text-white ring-8 ring-red-500/20 animate-pulse scale-105'
+                : isSpeaking
                   ? 'bg-emerald-500 text-white ring-8 ring-emerald-500/20 animate-bounce'
                   : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-105 shadow-indigo-600/30'
-              }`}
+                }`}
             >
               🎤
             </button>
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">
               {isListening
-                ? language === 'ta-IN' ? 'கேட்கிறது...' : 'Listening...'
+                ? 'Listening...'
                 : isSpeaking
-                ? 'JARVIS Speaking...'
-                : language === 'ta-IN' ? 'பேச மைக் தொடுங்கள்' : 'Tap microphone to speak'}
+                  ? 'JARVIS Speaking...'
+                  : 'Tap microphone to speak'}
             </p>
           </div>
 
@@ -266,11 +296,10 @@ export default function VoiceAssistant() {
             </div>
             <button
               onClick={toggleVoiceTracker}
-              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
-                voiceTrackerEnabled
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-              }`}
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${voiceTrackerEnabled
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                }`}
             >
               {voiceTrackerEnabled ? 'ON' : 'OFF'}
             </button>

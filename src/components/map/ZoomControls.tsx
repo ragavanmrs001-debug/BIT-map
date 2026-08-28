@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useMapStore } from '@/stores/map-store';
 import { MAX_ZOOM, MIN_ZOOM, ZOOM_FACTOR } from '@/lib/constants';
+import { LocationMarkerButton } from './LocationMarker';
 import Link from 'next/link';
 
 export default function ZoomControls() {
@@ -131,6 +132,9 @@ export default function ZoomControls() {
             >
               🧭
             </button>
+
+            {/* Live GPS Location Button */}
+            <LocationMarkerButton />
           </>
         )}
       </div>

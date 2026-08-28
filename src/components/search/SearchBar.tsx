@@ -2,9 +2,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useMapStore } from '@/stores/map-store';
+import { useNavigationStore } from '@/stores/navigation-store';
 import { buildings } from '@/data/buildings';
 import { zoomLevel4Tags } from '@/data/zoom-level-4';
 import { MAX_ZOOM } from '@/lib/constants';
+import { findNearestRestroom } from '@/lib/restroom-service';
 
 interface SearchResult {
   id: string;
@@ -15,6 +17,7 @@ interface SearchResult {
 }
 
 const CATEGORY_PILLS = [
+  { label: '🚻 Restrooms', query: 'restroom' },
   { label: 'Canteens', query: 'canteen' },
   { label: 'Hostels', query: 'hostel' },
   { label: 'Departments', query: 'block' },
@@ -132,6 +135,43 @@ export default function SearchBar() {
     setShowResults(false);
     setQuery('');
     setActivePill(null);
+
+    // If searching for restroom, locate nearest restroom and trigger walking route
+    if (result.id.startsWith('restroom-') || result.match.toLowerCase().includes('restroom')) {
+      const container = document.querySelector('.bg-map') as HTMLElement;
+      const currentX = container ? container.scrollLeft + window.innerWidth / 2 : 1700;
+      const currentY = container ? container.scrollTop + window.innerHeight / 2 : 1950;
+
+      const nearest = findNearestRestroom(currentX, currentY);
+      if (nearest) {
+        setZoomLevel(MAX_ZOOM);
+        const setRoute = useNavigationStore.getState().setRoute;
+        const setFrom = useNavigationStore.getState().setFrom;
+        const setTo = useNavigationStore.getState().setTo;
+
+        setFrom('main-gate');
+        setTo(nearest.restroom.id);
+        setRoute(
+          nearest.route.path,
+          nearest.route.nodePath.map((n) => ({ x: n.left, y: n.top })),
+          nearest.route.steps,
+          nearest.route.distance,
+          nearest.route.startingPoint,
+          nearest.route.endingPoint
+        );
+
+        if (container) {
+          container.scrollTo({
+            left: nearest.restroom.x - window.innerWidth / 2,
+            top: nearest.restroom.y - window.innerHeight / 2,
+            behavior: 'smooth',
+          });
+        }
+
+        setTimeout(() => selectPlace(nearest.restroom.id), 300);
+        return;
+      }
+    }
 
     // Find the tag position for the selected result
     const tag = zoomLevel4Tags.find((t) => t.id === result.id);

@@ -180,7 +180,8 @@ export const junctionPoints: JunctionPoint[] = [
     "top": 1932,
     "left": 2012,
     "surroundings": [
-      "sf-block"
+      "sf-block",
+      "restroom-sf-block"
     ]
   },
   {
@@ -232,7 +233,8 @@ export const junctionPoints: JunctionPoint[] = [
     "top": 2179,
     "left": 1923,
     "surroundings": [
-      "mechanic-front"
+      "mechanic-front",
+      "restroom-mech-block"
     ]
   },
   {

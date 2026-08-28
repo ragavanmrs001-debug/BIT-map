@@ -12,6 +12,9 @@ const categoryColors: Record<string, { fill: string; stroke: string; glow: strin
   food: { fill: 'rgba(245, 158, 11, 0.25)', stroke: '#F59E0B', glow: 'rgba(245, 158, 11, 0.6)' },
   admin: { fill: 'rgba(236, 72, 153, 0.25)', stroke: '#EC4899', glow: 'rgba(236, 72, 153, 0.6)' },
   facility: { fill: 'rgba(6, 182, 212, 0.25)', stroke: '#06B6D4', glow: 'rgba(6, 182, 212, 0.6)' },
+  footpath: { fill: 'rgba(52, 211, 153, 0.15)', stroke: '#10B981', glow: 'rgba(16, 185, 129, 0.5)' },
+  entrance: { fill: 'rgba(244, 63, 94, 0.3)', stroke: '#F43F5E', glow: 'rgba(244, 63, 94, 0.7)' },
+  restroom: { fill: 'rgba(99, 102, 241, 0.35)', stroke: '#6366F1', glow: 'rgba(99, 102, 241, 0.8)' },
 };
 
 export default React.memo(function ShapesLayer() {

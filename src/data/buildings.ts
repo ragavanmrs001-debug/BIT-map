@@ -1455,5 +1455,99 @@ export const buildings: Building[] = [
         ]
       }
     ]
+  },
+  {
+    "id": "biic-center",
+    "name": "BIT Innovation & Incubation Center (BIIC)",
+    "main": "Research Park",
+    "about": "Premier startup incubator, patent cell, and prototype lab at BIT campus.",
+    "terms": [
+      "biic",
+      "incubation",
+      "startup center",
+      "patent cell",
+      "innovation center"
+    ],
+    "floors": [
+      {
+        "name": "Ground Floor",
+        "rooms": [
+          "Startup Incubation Pods",
+          "3D Prototyping Lab",
+          "Intellectual Property & Patent Office",
+          "Founder Discussion Lounge"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nanotech-center",
+    "name": "Center for Nanoscience & Nanotechnology",
+    "main": "Special Labs",
+    "about": "Advanced materials research, electron microscopy, and clean room facilities.",
+    "terms": [
+      "nano",
+      "nanotechnology",
+      "cleanroom",
+      "semiconductor lab",
+      "microscopy"
+    ],
+    "floors": [
+      {
+        "name": "First Floor",
+        "rooms": [
+          "Clean Room Class 1000",
+          "Scanning Electron Microscopy (SEM) Lab",
+          "Nanomaterials Synthesis Lab",
+          "Thin Film Fabrication Facility"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "restroom-sf-block",
+    "name": "SF Block Restrooms",
+    "main": "Sunflower Block",
+    "about": "Restroom facilities for Sunflower Block (Gents, Ladies & Accessible).",
+    "terms": [
+      "restroom",
+      "toilet",
+      "washroom",
+      "gents toilet",
+      "ladies toilet",
+      "sf block restroom"
+    ],
+    "floors": [
+      {
+        "name": "Ground & 1st Floor",
+        "rooms": [
+          "Gents Restroom",
+          "Ladies Restroom",
+          "Wheelchair Accessible Restroom"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "restroom-canteen",
+    "name": "Food Court Restrooms",
+    "main": "Cafeteria",
+    "about": "Central Food Court & Canteen Washrooms.",
+    "terms": [
+      "restroom",
+      "toilet",
+      "washroom",
+      "canteen restroom",
+      "food court toilet"
+    ],
+    "floors": [
+      {
+        "name": "Ground Floor",
+        "rooms": [
+          "Gents Restroom",
+          "Ladies Restroom"
+        ]
+      }
+    ]
   }
 ];

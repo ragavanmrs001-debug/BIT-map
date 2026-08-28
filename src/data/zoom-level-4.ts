@@ -648,5 +648,59 @@ export const zoomLevel4Tags: PlaceTag[] = [
     "name": "Dance Hall",
     "top": "3414px",
     "left": "919px"
+  },
+  {
+    "id": "restroom-sf-block",
+    "name": "Restroom (SF Block)",
+    "top": "1950px",
+    "left": "2040px"
+  },
+  {
+    "id": "restroom-mech-block",
+    "name": "Restroom (Mech Block)",
+    "top": "2150px",
+    "left": "2020px"
+  },
+  {
+    "id": "restroom-as-block",
+    "name": "Restroom (AS Block)",
+    "top": "1835px",
+    "left": "1520px"
+  },
+  {
+    "id": "restroom-ib-block",
+    "name": "Restroom (IB Block)",
+    "top": "1820px",
+    "left": "1270px"
+  },
+  {
+    "id": "restroom-library",
+    "name": "Restroom (Central Library)",
+    "top": "2725px",
+    "left": "1435px"
+  },
+  {
+    "id": "restroom-canteen",
+    "name": "Restroom (Food Court / Canteen)",
+    "top": "3005px",
+    "left": "1645px"
+  },
+  {
+    "id": "restroom-auditorium",
+    "name": "Restroom (Main Auditorium)",
+    "top": "2560px",
+    "left": "1415px"
+  },
+  {
+    "id": "restroom-boys-hostel",
+    "name": "Restroom (Boys Hostel Quad)",
+    "top": "2750px",
+    "left": "2525px"
+  },
+  {
+    "id": "restroom-girls-hostel",
+    "name": "Restroom (Girls Hostel Quad)",
+    "top": "3440px",
+    "left": "1005px"
   }
 ];

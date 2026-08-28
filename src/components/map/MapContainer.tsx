@@ -79,12 +79,29 @@ export default function MapContainer() {
     [zoomLevel, setZoomLevel, stopInertia]
   );
 
-  // Mouse wheel zoom (strictly when holding Ctrl/Cmd key to isolate scroll drag)
+  const lastWheelTime = useRef(0);
+  const touchStartDist = useRef(0);
+  const isTouchDragging = useRef(false);
+  const touchStartPos = useRef({ x: 0, y: 0 });
+
+  // Mouse & trackpad wheel zoom handler with strict horizontal swipe protection
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
+      // Ignore wheel zoom if user is primarily panning horizontally (left-to-right / right-to-left swipe)
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        return;
+      }
+
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
+        const now = performance.now();
+        // Debounce trackpad zoom changes (minimum 280ms threshold) to prevent rapid low-to-high zoom jitter
+        if (now - lastWheelTime.current < 280) return;
+        if (Math.abs(e.deltaY) < 18) return;
+
+        lastWheelTime.current = now;
         stopInertia();
+
         if (e.deltaY < 0) {
           handleZoom('in');
         } else {
@@ -185,6 +202,140 @@ export default function MapContainer() {
     };
   }, [stopInertia]);
 
+  // Touch event listeners for 60fps mobile touch drag & 2-finger pinch zoom
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let touchRaf: number | null = null;
+    let pendingTouchX = 0;
+    let pendingTouchY = 0;
+
+    const getDistance = (t1: Touch, t2: Touch) => {
+      const dx = t1.clientX - t2.clientX;
+      const dy = t1.clientY - t2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const handleNativeTouchStart = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.tag, button, input, select, .place-details, .directions-panel')) {
+        return;
+      }
+
+      stopInertia();
+
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        isTouchDragging.current = true;
+        touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+        startX.current = touch.clientX;
+        startY.current = touch.clientY;
+        lastMousePos.current = { x: touch.clientX, y: touch.clientY, time: performance.now() };
+        velocity.current = { vx: 0, vy: 0 };
+        scrollLeftStart.current = el.scrollLeft;
+        scrollTopStart.current = el.scrollTop;
+      } else if (e.touches.length === 2) {
+        isTouchDragging.current = false;
+        touchStartDist.current = getDistance(e.touches[0], e.touches[1]);
+      }
+    };
+
+    const handleNativeTouchMove = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.tag, button, input, select, .place-details, .directions-panel')) {
+        return;
+      }
+
+      if (e.touches.length === 1 && isTouchDragging.current) {
+        // Prevent default browser edge back-swipe navigation when dragging side to side
+        e.preventDefault();
+
+        const touch = e.touches[0];
+        const now = performance.now();
+        const dt = Math.max(now - lastMousePos.current.time, 1);
+        const dx = touch.clientX - lastMousePos.current.x;
+        const dy = touch.clientY - lastMousePos.current.y;
+
+        velocity.current = { vx: dx / dt, vy: dy / dt };
+        lastMousePos.current = { x: touch.clientX, y: touch.clientY, time: now };
+
+        const totalWalkX = touch.clientX - startX.current;
+        const totalWalkY = touch.clientY - startY.current;
+
+        pendingTouchX = scrollLeftStart.current - totalWalkX;
+        pendingTouchY = scrollTopStart.current - totalWalkY;
+
+        if (touchRaf === null) {
+          touchRaf = requestAnimationFrame(() => {
+            if (el) {
+              el.scrollLeft = pendingTouchX;
+              el.scrollTop = pendingTouchY;
+            }
+            touchRaf = null;
+          });
+        }
+      } else if (e.touches.length === 2) {
+        e.preventDefault();
+        const dist = getDistance(e.touches[0], e.touches[1]);
+        const delta = dist - touchStartDist.current;
+        const now = performance.now();
+
+        if (Math.abs(delta) > 55 && now - lastWheelTime.current > 350) {
+          lastWheelTime.current = now;
+          if (delta > 0) {
+            handleZoom('in');
+          } else {
+            handleZoom('out');
+          }
+          touchStartDist.current = dist;
+        }
+      }
+    };
+
+    const handleNativeTouchEnd = () => {
+      if (touchRaf !== null) {
+        cancelAnimationFrame(touchRaf);
+        touchRaf = null;
+      }
+
+      if (isTouchDragging.current && el) {
+        isTouchDragging.current = false;
+        let vx = velocity.current.vx * 14;
+        let vy = velocity.current.vy * 14;
+
+        const applyTouchInertia = () => {
+          if (!el) return;
+          if (Math.abs(vx) < 0.2 && Math.abs(vy) < 0.2) {
+            inertiaAnimationId.current = null;
+            return;
+          }
+
+          el.scrollLeft -= vx;
+          el.scrollTop -= vy;
+          vx *= 0.91;
+          vy *= 0.91;
+
+          inertiaAnimationId.current = requestAnimationFrame(applyTouchInertia);
+        };
+
+        stopInertia();
+        inertiaAnimationId.current = requestAnimationFrame(applyTouchInertia);
+      }
+    };
+
+    el.addEventListener('touchstart', handleNativeTouchStart, { passive: true });
+    el.addEventListener('touchmove', handleNativeTouchMove, { passive: false });
+    el.addEventListener('touchend', handleNativeTouchEnd, { passive: true });
+
+    return () => {
+      if (touchRaf !== null) cancelAnimationFrame(touchRaf);
+      el.removeEventListener('touchstart', handleNativeTouchStart);
+      el.removeEventListener('touchmove', handleNativeTouchMove);
+      el.removeEventListener('touchend', handleNativeTouchEnd);
+    };
+  }, [handleZoom, stopInertia]);
+
   // Mouse down on container to start drag
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -204,7 +355,7 @@ export default function MapContainer() {
     scrollTopStart.current = containerRef.current?.scrollTop || 0;
   };
 
-  // Touch handlers for mobile pan & long-press pin drop (no accidental zoom on touch drag)
+  // React touch handlers for long-press pin drop
   const handleTouchStart = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement;
     if (target.closest('.tag, button, input, select, .place-details, .directions-panel')) {
@@ -213,7 +364,6 @@ export default function MapContainer() {
 
     stopInertia();
 
-    // Long press for pin drop
     const touch = e.touches[0];
     const container = containerRef.current;
     if (!container) return;
@@ -223,7 +373,7 @@ export default function MapContainer() {
       const x = touch.clientX - rect.left + container.scrollLeft;
       const y = touch.clientY - rect.top + container.scrollTop;
       setPin(x, y);
-    }, 800);
+    }, 850);
   };
 
   const handleTouchEnd = () => {

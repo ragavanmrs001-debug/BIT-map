@@ -16,14 +16,17 @@ body {
   position: relative;
   width: 100vw;
   height: 100vh;
-  overflow: scroll;
+  height: 100svh;
+  overflow: auto;
   margin: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
-  will-change: scroll-position, transform;
+  will-change: scroll-position;
   transform: translateZ(0);
   backface-visibility: hidden;
   contain: layout style paint;
+  touch-action: pan-x pan-y;
+  overscroll-behavior: contain;
 }
 
 .bg-map::-webkit-scrollbar {
@@ -423,7 +426,7 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 200;
+  z-index: 300;
   width: 90%;
   max-width: 440px;
 }
@@ -434,7 +437,7 @@ body {
   background: #FFFFFF;
   color: #475569;
   position: relative;
-  padding: 24px 20px 16px;
+  padding: 24px 24px 16px;
   font-family: 'Nunito Sans', sans-serif;
   font-weight: 500;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
@@ -443,23 +446,32 @@ body {
 
 .close-btn {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 12px;
+  right: 12px;
   color: white;
   font-family: 'Quicksand', sans-serif;
   font-weight: 800;
   background: #7B68EE;
-  width: 24px;
-  height: 24px;
-  text-align: center;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  outline: none;
   border-radius: 50%;
   cursor: pointer;
-  line-height: 24px;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(123, 104, 238, 0.4);
+  transition: all 0.2s ease;
+  pointer-events: auto;
 }
 
-.close-btn:hover {
+.close-btn:hover,
+.close-btn:active {
   background: #6a60dd;
+  transform: scale(1.1);
 }
 
 .notes hr {
