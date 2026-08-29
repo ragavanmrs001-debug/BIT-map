@@ -14,7 +14,7 @@ const BIT_LNG = 77.2764;
 
 export default function ThreeMap3D() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { viewMode, theme, selectPlace, selectedPlaceId, setViewMode } = useMapStore();
+  const { viewMode, theme, selectPlace, selectedPlaceId, setViewMode, userGeoPos, userCanvasPos } = useMapStore();
   const { isActive: isNavActive, nodeCoordinates } = useNavigationStore();
   const [tooltip, setTooltip] = useState<{ name: string; x: number; y: number } | null>(null);
 
@@ -192,6 +192,53 @@ export default function ThreeMap3D() {
         const routeMesh = new THREE.Mesh(tubeGeo, tubeMat);
         scene.add(routeMesh);
       }
+
+      // Live 3D Real-time GPS Location Beacon Marker
+      const activeUserPos = userGeoPos || (userCanvasPos ? { x: userCanvasPos.x, y: userCanvasPos.y } : null);
+      if (activeUserPos) {
+        const posX = activeUserPos.x - MAP_WIDTH / 2;
+        const posZ = activeUserPos.y - MAP_HEIGHT / 2;
+
+        const markerGroup = new THREE.Group();
+        markerGroup.position.set(posX, 20, posZ);
+
+        // Core Glowing Blue Dot Sphere
+        const sphereGeo = new THREE.SphereGeometry(12, 16, 16);
+        const sphereMat = new THREE.MeshStandardMaterial({
+          color: 0x3b82f6,
+          emissive: 0x2563eb,
+          emissiveIntensity: 0.8,
+          roughness: 0.2,
+        });
+        const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
+        markerGroup.add(sphereMesh);
+
+        // Vertical Light Beam
+        const beamGeo = new THREE.CylinderGeometry(2, 8, 80, 16);
+        const beamMat = new THREE.MeshBasicMaterial({
+          color: 0x60a5fa,
+          transparent: true,
+          opacity: 0.45,
+        });
+        const beamMesh = new THREE.Mesh(beamGeo, beamMat);
+        beamMesh.position.y = 40;
+        markerGroup.add(beamMesh);
+
+        // Ground Pulse Halo Ring
+        const ringGeo = new THREE.RingGeometry(15, 35, 32);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: 0x3b82f6,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.6,
+        });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.rotation.x = Math.PI / 2;
+        ringMesh.position.y = -18;
+        markerGroup.add(ringMesh);
+
+        scene.add(markerGroup);
+      }
     }
 
     // ==========================================
@@ -358,7 +405,7 @@ export default function ThreeMap3D() {
         container.removeChild(renderer.domElement);
       }
     };
-  }, [viewMode, theme, selectedPlaceId, isNavActive, nodeCoordinates, selectPlace]);
+  }, [viewMode, theme, selectedPlaceId, isNavActive, nodeCoordinates, selectPlace, userGeoPos, userCanvasPos]);
 
   return (
     <div className="relative w-full h-full">
@@ -390,6 +437,12 @@ export default function ThreeMap3D() {
         >
           {viewMode === '3d-satellite' ? '🌍 View Earth Globe' : '🏛️ View 3D Campus'}
         </button>
+        {(userGeoPos || userCanvasPos) && (
+          <div className="px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-600/90 text-white backdrop-blur-md shadow flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+            <span>📍 Live Location</span>
+          </div>
+        )}
       </div>
     </div>
   );

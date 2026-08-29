@@ -32,6 +32,7 @@ interface MapState {
   // Directions & Live GPS Canvas Coordinates
   showDirections: boolean;
   userCanvasPos: { x: number; y: number } | null;
+  userGeoPos: { x: number; y: number; lat: number; lng: number; accuracy: number; heading: number | null } | null;
 
   // Rotation (in degrees 0-360)
   mapRotation: number;
@@ -50,6 +51,7 @@ interface MapState {
   setShowInstruction: (show: boolean) => void;
   setShowDirections: (show: boolean) => void;
   setUserCanvasPos: (pos: { x: number; y: number } | null) => void;
+  setUserGeoPos: (pos: { x: number; y: number; lat: number; lng: number; accuracy: number; heading: number | null } | null) => void;
   setMapRotation: (angle: number | ((prev: number) => number)) => void;
   rotateMapBy: (deltaDegrees: number) => void;
   resetRotation: () => void;
@@ -69,6 +71,7 @@ export const useMapStore = create<MapState>((set) => ({
   showInstruction: true,
   showDirections: false,
   userCanvasPos: null,
+  userGeoPos: null,
   mapRotation: 0,
 
   toggleTheme: () =>
@@ -120,6 +123,8 @@ export const useMapStore = create<MapState>((set) => ({
   setShowDirections: (show) => set({ showDirections: show }),
 
   setUserCanvasPos: (pos) => set({ userCanvasPos: pos }),
+
+  setUserGeoPos: (pos) => set({ userGeoPos: pos }),
 
   setMapRotation: (angle) =>
     set((state) => ({

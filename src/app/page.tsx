@@ -13,6 +13,7 @@ import FloatingNavCard from '@/components/navigation/FloatingNavCard';
 import { useMapStore } from '@/stores/map-store';
 
 import { LocationMarkerButton } from '@/components/map/LocationMarker';
+import LocationConsentBanner from '@/components/map/LocationConsentBanner';
 import VoiceAssistant from '@/components/voice/VoiceAssistant';
 
 // Dynamic import for ThreeMap3D with SSR disabled
@@ -68,6 +69,9 @@ function MapView() {
     >
       {/* Search Header */}
       <SearchBar />
+
+      {/* Location Permission First-Load Consent Banner */}
+      <LocationConsentBanner />
 
       {/* Main Interactive Map (2D or 3D) */}
       {viewMode === '2d' ? <MapContainer /> : <ThreeMap3D />}

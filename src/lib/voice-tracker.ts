@@ -13,15 +13,15 @@ export interface CampusLandmark {
   description: string;
 }
 
-// Key BIT Erode Campus Landmarks (Map Canvas coordinates & GPS estimates)
+// Key BIT Erode Campus Landmarks (Map Canvas coordinates & GPS estimates aligned with 0.29m/px scale)
 export const BIT_LANDMARKS: CampusLandmark[] = [
   {
     name: 'Main Academic Quad / Admin Block',
     nameTa: 'முதன்மை நிர்வாக தொகுதி',
     x: 1700,
     y: 1950,
-    lat: 11.4945,
-    lng: 77.2765,
+    lat: 11.4986,
+    lng: 77.2743,
     description: 'Central administrative quadrant and main academic building entrance.',
   },
   {
@@ -29,8 +29,8 @@ export const BIT_LANDMARKS: CampusLandmark[] = [
     nameTa: 'மத்திய நூலகம்',
     x: 1550,
     y: 1800,
-    lat: 11.4950,
-    lng: 77.2760,
+    lat: 11.49899,
+    lng: 77.2739,
     description: 'State-of-the-art campus central library.',
   },
   {
@@ -38,8 +38,8 @@ export const BIT_LANDMARKS: CampusLandmark[] = [
     nameTa: 'கணினி அறிவியல் மற்றும் தகவல் தொழில்நுட்ப கட்டிடம்',
     x: 1850,
     y: 2100,
-    lat: 11.4940,
-    lng: 77.2770,
+    lat: 11.49821,
+    lng: 77.2747,
     description: 'Department of Computer Science and Engineering & Information Technology.',
   },
   {
@@ -47,8 +47,8 @@ export const BIT_LANDMARKS: CampusLandmark[] = [
     nameTa: 'இயந்திரவியல் மற்றும் மின்சாரவியல் பிரிவு',
     x: 1400,
     y: 2200,
-    lat: 11.4935,
-    lng: 77.2755,
+    lat: 11.49795,
+    lng: 77.2732,
     description: 'Department of Mechanical Engineering and Electrical Laboratories.',
   },
   {
@@ -56,8 +56,8 @@ export const BIT_LANDMARKS: CampusLandmark[] = [
     nameTa: 'பி.ஐ.டி உணவகம்',
     x: 2100,
     y: 1750,
-    lat: 11.4955,
-    lng: 77.2780,
+    lat: 11.49912,
+    lng: 77.27536,
     description: 'Main student dining facility and refreshment center.',
   },
   {
@@ -65,8 +65,8 @@ export const BIT_LANDMARKS: CampusLandmark[] = [
     nameTa: 'மாணவர் விடுதி வளாகம்',
     x: 2300,
     y: 1400,
-    lat: 11.4965,
-    lng: 77.2790,
+    lat: 11.50003,
+    lng: 77.2759,
     description: 'BIT Hostel Residential Quadrangle.',
   },
 ];

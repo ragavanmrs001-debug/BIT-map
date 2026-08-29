@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useMapStore } from '@/stores/map-store';
 import { MAX_ZOOM, getMapDimensions } from '@/lib/constants';
 import { globalVoiceTracker } from '@/lib/voice-tracker';
@@ -16,11 +16,12 @@ export interface GeoLocationPos {
 
 // Convert GPS Lat/Lng to Base Level 4 Canvas Coordinates for BIT Sathyamangalam (Erode) Campus
 export function gpsToCanvasCoords(lat: number, lng: number): { x: number; y: number } {
-  // Reference Center: Main Academic Quad (X: 1700, Y: 1950) at Lat 11.4962° N, Lng 77.2762° E
-  const baseLat = 11.4962;
-  const baseLng = 77.2762;
-  const latScale = 92000;
-  const lngScale = 92000;
+  // Reference Center: Main Academic Quad (X: 1700, Y: 1950) at Lat 11.4986° N, Lng 77.2743° E
+  // 0.29 meters per pixel canvas scale
+  const baseLat = 11.4986;
+  const baseLng = 77.2743;
+  const latScale = 383237.93;
+  const lngScale = 375557.50;
 
   const x = 1700 + (lng - baseLng) * lngScale;
   const y = 1950 - (lat - baseLat) * latScale;
@@ -35,6 +36,7 @@ export function gpsToCanvasCoords(lat: number, lng: number): { x: number; y: num
 export function useGPSLocation() {
   const [userPos, setUserPos] = useState<GeoLocationPos | null>(null);
   const [compassHeading, setCompassHeading] = useState<number | null>(null);
+  const compassHeadingRef = useRef<number | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Device orientation / magnetometer compass heading sensor
@@ -42,7 +44,6 @@ export function useGPSLocation() {
     if (typeof window === 'undefined') return;
 
     const handleOrientation = (e: DeviceOrientationEvent) => {
-      // webkitCompassHeading for iOS, alpha for Android
       let heading: number | null = null;
       const webkitHeading = (e as unknown as { webkitCompassHeading?: number }).webkitCompassHeading;
       if (typeof webkitHeading === 'number') {
@@ -51,7 +52,9 @@ export function useGPSLocation() {
         heading = 360 - e.alpha;
       }
       if (heading !== null) {
-        setCompassHeading(Math.round(heading));
+        const rounded = Math.round(heading);
+        compassHeadingRef.current = rounded;
+        setCompassHeading(rounded);
       }
     };
 
@@ -68,6 +71,7 @@ export function useGPSLocation() {
     };
   }, []);
 
+  // Isolate GPS watchPosition from compass heading state updates to avoid teardown churn
   useEffect(() => {
     if (typeof window !== 'undefined' && 'geolocation' in navigator) {
       const watchId = navigator.geolocation.watchPosition(
@@ -75,19 +79,22 @@ export function useGPSLocation() {
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
           const { x, y } = gpsToCanvasCoords(lat, lng);
-          const heading = pos.coords.heading !== null ? pos.coords.heading : compassHeading;
+          const heading = pos.coords.heading !== null ? pos.coords.heading : compassHeadingRef.current;
 
-          setUserPos({
+          const locationData: GeoLocationPos = {
             x,
             y,
             lat,
             lng,
             accuracy: pos.coords.accuracy,
             heading,
-          });
+          };
 
-          // Sync to global map store for navigation calculation
+          setUserPos(locationData);
+
+          // Sync to global map store for navigation calculation and 3D mode
           useMapStore.getState().setUserCanvasPos({ x, y });
+          useMapStore.getState().setUserGeoPos(locationData);
 
           // Feed position to voice tracker engine for step & idle voice guidance
           globalVoiceTracker.updatePosition(lat, lng);
@@ -96,12 +103,12 @@ export function useGPSLocation() {
           console.warn('GPS location update error:', err.message);
           setErrorMsg(err.message);
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 2000 }
       );
 
       return () => navigator.geolocation.clearWatch(watchId);
     }
-  }, [compassHeading]);
+  }, []);
 
   return { userPos, compassHeading, errorMsg };
 }
